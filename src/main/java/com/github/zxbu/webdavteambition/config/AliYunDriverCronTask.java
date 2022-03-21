@@ -30,7 +30,7 @@ public class AliYunDriverCronTask {
         try {
             LOGGER.info("定时刷新 Refresh Token 任务开始");
             TFile root = mAliYunDriverClientService.getTFileByPath("/");
-            mAliYunDriverClientService.getTFiles(root.getFile_id());
+            mAliYunDriverClientService.getTFiles(root.getFile_id(), null);
         } catch (Throwable e) {
             LOGGER.error("", e);
         } finally {
