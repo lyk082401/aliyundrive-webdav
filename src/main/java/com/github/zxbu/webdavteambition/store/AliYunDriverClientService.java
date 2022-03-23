@@ -6,6 +6,7 @@ import com.github.zxbu.webdavteambition.client.AliYunDriverClient;
 import com.github.zxbu.webdavteambition.config.AliYunDriveProperties;
 import com.github.zxbu.webdavteambition.model.*;
 import com.github.zxbu.webdavteambition.model.result.TFile;
+import com.github.zxbu.webdavteambition.model.result.TFileCacheKeyInfo;
 import com.github.zxbu.webdavteambition.model.result.TFileListResult;
 import com.github.zxbu.webdavteambition.model.result.UploadPreResult;
 import com.github.zxbu.webdavteambition.util.JsonUtil;
@@ -31,6 +32,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,7 +60,7 @@ public class AliYunDriverClientService {
     private static String rootPath = "/";
     private static int chunkSize = 10485760; // 10MB
     private TFile rootTFile = null;
-    private Pattern sharePatten = Pattern.compile("^.*卍([a-zA-Z0-9]{11})$");
+    private final Pattern shareNamePatten = Pattern.compile("^.*!(?<shareId>[a-zA-Z0-9]{11})(?>$|:(?<password>[a-zA-Z0-9]{4})$)");
 
     private static LoadingCache<String, Set<TFile>> tFilesCache = CacheBuilder.newBuilder()
             .initialCapacity(128)
@@ -66,14 +68,9 @@ public class AliYunDriverClientService {
             .expireAfterWrite(1, TimeUnit.MINUTES)
             .build(new CacheLoader<String, Set<TFile>>() {
                 @Override
-                public Set<TFile> load(String key) throws Exception {
-                    if (key.contains(":")) {
-                        String shareId = key.replaceAll("(.+):.*","$1");
-                        String nodeId = key.replaceAll("(.+):","");
-                        // 获取真实的文件列表
-                        return AliYunDriverClientService.getInstance().getTFiles2(nodeId, shareId);
-                    }
-                    return AliYunDriverClientService.getInstance().getTFiles2(key, null);
+                public Set<TFile> load(String jsonKey) throws Exception {
+                    TFileCacheKeyInfo info = JsonUtil.readValue(jsonKey, TFileCacheKeyInfo.class);
+                    return AliYunDriverClientService.getInstance().getTFiles2(info.nodeId, info.shareId, info.sharePassword);
                 }
             });
 
@@ -86,28 +83,29 @@ public class AliYunDriverClientService {
         AliYunDriverFileSystemStore.setBean(this);
     }
 
-    public Set<TFile> getTFiles(String nodeId, String shareId) {
+    public Set<TFile> getTFiles(String nodeId, String shareId, String sharePassword) {
         try {
-            Set<TFile> tFiles = tFilesCache.get(shareId + ":" + nodeId, () -> {
+            String jsonKey = JsonUtil.toJson(new TFileCacheKeyInfo(nodeId, shareId, sharePassword));
+            Set<TFile> tFiles = tFilesCache.get(jsonKey, () -> {
                 // 获取真实的文件列表
-                return getTFiles2(nodeId, shareId);
+                return getTFiles2(nodeId, shareId, sharePassword);
             });
             Set<TFile> all = new LinkedHashSet<>(tFiles);
             // 获取上传中的文件列表
             Collection<TFile> virtualTFiles = virtualTFileService.list(nodeId);
             all.addAll(virtualTFiles);
             return all;
-
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Set<TFile> getTFiles2(String nodeId, String shareId) {
-        List<TFile> tFileList = fileListFromApi(nodeId, null, new ArrayList<>(), shareId);
+    private Set<TFile> getTFiles2(String nodeId, String shareId, String sharePassword) {
+        List<TFile> tFileList = fileListFromApi(nodeId, null, new ArrayList<>(), shareId, sharePassword);
         tFileList.sort(Comparator.comparing(TFile::getUpdated_at).reversed());
         Set<TFile> tFileSets = new LinkedHashSet<>();
         for (TFile tFile : tFileList) {
+            tFile.setShare_password(sharePassword);
             if (!tFileSets.add(tFile)) {
                 LOGGER.info("当前目录下{} 存在同名文件：{}，文件大小：{}", nodeId, tFile.getName(), tFile.getSize());
             }
@@ -116,7 +114,7 @@ public class AliYunDriverClientService {
         return tFileSets;
     }
 
-    private List<TFile> fileListFromApi(String nodeId, String marker, List<TFile> all, String shareId) {
+    private List<TFile> fileListFromApi(String nodeId, String marker, List<TFile> all, String shareId, String sharePassword) {
         FileListRequest listQuery = new FileListRequest();
         listQuery.setMarker(marker);
         listQuery.setLimit(200);
@@ -128,14 +126,20 @@ public class AliYunDriverClientService {
         } else {
             listQuery.setDrive_id(client.getDriveId());
         }
-        String json = client.post("/file/list", listQuery, shareId);
-        TFileListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<TFileListResult<TFile>>() {
-        });
+        String json;
+        try {
+            json = client.post("/file/list", listQuery, shareId, sharePassword);
+        } catch (WebdavException e){
+            // 无法获取列表可能是 shareId 已经失效，与其报错不如返回空，特别是使用 dav 挂载时候，报错会导致 IO 错误无法删除目录
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+        TFileListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<TFileListResult<TFile>>() {});
         all.addAll(tFileListResult.getItems());
         if (StringUtils.isEmpty(tFileListResult.getNext_marker())) {
             return all;
         }
-        return fileListFromApi(nodeId, tFileListResult.getNext_marker(), all, shareId);
+        return fileListFromApi(nodeId, tFileListResult.getNext_marker(), all, shareId, sharePassword);
     }
 
 
@@ -270,7 +274,7 @@ public class AliYunDriverClientService {
         TFile tFile = getTFileByPath(sourcePath);
         RenameRequest renameRequest = new RenameRequest();
         renameRequest.setDrive_id(client.getDriveId());
-        renameRequest.setFile_id(tFile.getFile_id());
+        renameRequest.setFile_id(tFile.getOrigin_file_id() != null ? tFile.getOrigin_file_id() : tFile.getFile_id());
         renameRequest.setName(newName);
         client.post("/file/update", renameRequest);
         clearCache();
@@ -284,7 +288,7 @@ public class AliYunDriverClientService {
         TFile targetTFile = getTFileByPath(targetPath);
         MoveRequest moveRequest = new MoveRequest();
         moveRequest.setDrive_id(client.getDriveId());
-        moveRequest.setFile_id(sourceTFile.getFile_id());
+        moveRequest.setFile_id(sourceTFile.getOrigin_file_id() != null ? sourceTFile.getOrigin_file_id() : sourceTFile.getFile_id());
         moveRequest.setTo_parent_file_id(targetTFile.getFile_id());
         client.post("/file/move", moveRequest);
         clearCache();
@@ -298,7 +302,7 @@ public class AliYunDriverClientService {
         }
         RemoveRequest removeRequest = new RemoveRequest();
         removeRequest.setDrive_id(client.getDriveId());
-        removeRequest.setFile_id(tFile.getFile_id());
+        removeRequest.setFile_id(tFile.getOrigin_file_id() != null ? tFile.getOrigin_file_id() : tFile.getFile_id());
         client.post("/recyclebin/trash", removeRequest);
         clearCache();
     }
@@ -352,9 +356,9 @@ public class AliYunDriverClientService {
             DownloadRequest downloadRequest = new DownloadRequest();
             downloadRequest.setFile_id(file.getFile_id());
             downloadRequest.setShare_id(file.getShare_id());
-            downloadRequest.setShareToken(client.readShareToken(file.getShare_id()));
+            downloadRequest.setShareToken(client.readShareToken(file.getShare_id(), file.getShare_password()));
             downloadRequest.setExpire_sec(600);
-            String json = client.post("/file/get_share_link_download_url", downloadRequest, file.getShare_id());
+            String json = client.post("/file/get_share_link_download_url", downloadRequest, file.getShare_id(), file.getShare_password());
             Object url = JsonUtil.getJsonNodeValue(json, "url");
             LOGGER.debug("{} url = {}", path, url);
             return client.download(url.toString(), request, size);
@@ -373,11 +377,7 @@ public class AliYunDriverClientService {
         if (tFile == null ) {
             return null;
         }
-        Matcher matcher = sharePatten.matcher(pathInfo.getName());
-        if (matcher.find()){
-            return getShareRootTFile(matcher.group(1), pathInfo.getName());
-        }
-        return getNodeIdByParentId(tFile.getFile_id(), tFile.getShare_id(), pathInfo.getName());
+        return getNodeIdByParentId(tFile.getFile_id(), pathInfo.getName(), tFile.getShare_id(), tFile.getShare_password());
     }
 
 
@@ -416,7 +416,7 @@ public class AliYunDriverClientService {
         return rootTFile;
     }
 
-    private TFile getShareRootTFile(String shareId, String name){
+    private TFile getShareRootTFile(String shareId, String name, String originFileId, String sharePassword){
         TFile rootTFile = new TFile();
         rootTFile.setName(name);
         rootTFile.setFile_id("root");
@@ -424,14 +424,21 @@ public class AliYunDriverClientService {
         rootTFile.setUpdated_at(new Date());
         rootTFile.setType("folder");
         rootTFile.setShare_id(shareId);
+        rootTFile.setOrigin_file_id(originFileId);
+        rootTFile.setShare_password(sharePassword);
         return rootTFile;
     }
 
-    private TFile getNodeIdByParentId(String parentId, String shareId, String name) {
-        Set<TFile> tFiles = getTFiles(parentId, shareId);
+    private TFile getNodeIdByParentId(String parentId, String name, String shareId, String sharePassword) {
+        Set<TFile> tFiles = getTFiles(parentId, shareId, sharePassword);
         for (TFile tFile : tFiles) {
             if (tFile.getName().equals(name)) {
-                return tFile;
+                Matcher matcher = shareNamePatten.matcher(name);
+                if (matcher.find()){
+                    return getShareRootTFile(matcher.group("shareId"), name, tFile.getFile_id(), matcher.group("password"));
+                } else {
+                    return tFile;
+                }
             }
         }
         return null;
