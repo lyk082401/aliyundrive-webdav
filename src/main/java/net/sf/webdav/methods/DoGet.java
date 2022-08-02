@@ -145,7 +145,7 @@ public class DoGet extends DoHead {
                     childrenTemp.append("\">");
                     childrenTemp.append("<td>");
                     childrenTemp.append("<a href=\"");
-                    childrenTemp.append(URLEncoder.encode(child, "utf-8"));
+                    childrenTemp.append(UrlEscapers.urlFragmentEscaper().escape(child));
                     StoredObject obj= _store.getStoredObject(transaction, path+"/"+child);
                     if (obj == null)
                     {
