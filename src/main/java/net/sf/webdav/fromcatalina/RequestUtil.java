@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.TimeZone;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 /**
  * General purpose request parsing and encoding utility methods.

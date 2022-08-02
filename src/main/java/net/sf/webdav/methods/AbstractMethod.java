@@ -27,9 +27,9 @@ import java.util.Hashtable;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -290,12 +290,12 @@ public abstract class AbstractMethod implements IMethodExecutor {
     protected String getRelativePath(HttpServletRequest request) {
 
         // Are we being processed by a RequestDispatcher.include()?
-        if (request.getAttribute("javax.servlet.include.request_uri") != null) {
+        if (request.getAttribute("jakarta.servlet.include.request_uri") != null) {
             String result = (String) request
-                    .getAttribute("javax.servlet.include.path_info");
+                    .getAttribute("jakarta.servlet.include.path_info");
             // if (result == null)
             // result = (String) request
-            // .getAttribute("javax.servlet.include.servlet_path");
+            // .getAttribute("jakarta.servlet.include.servlet_path");
             if ((result == null) || (result.equals("")))
                 result = "/";
             return (result);

@@ -26,8 +26,9 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.google.common.net.UrlEscapers;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import net.sf.webdav.IMimeTyper;
 import net.sf.webdav.ITransaction;
@@ -36,7 +37,6 @@ import net.sf.webdav.StoredObject;
 import net.sf.webdav.WebdavStatus;
 import net.sf.webdav.locking.ResourceLocks;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jetty.io.EofException;
 
 public class DoGet extends DoHead {
 
@@ -85,7 +85,6 @@ public class DoGet extends DoHead {
                 IOUtils.closeQuietly(bos);
                 IOUtils.closeQuietly(out);
             }
-        } catch (EofException ignore) {
         } catch (Exception e) {
             LOG.warn("{} doBody causes Exception!\n", path
                     ,e);

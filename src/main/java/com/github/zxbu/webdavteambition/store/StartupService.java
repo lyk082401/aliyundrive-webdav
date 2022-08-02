@@ -4,11 +4,13 @@ import com.github.zxbu.webdavteambition.config.AliYunDriverCronTask;
 
 import java.io.IOException;
 
-import javax.servlet.GenericServlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import jakarta.servlet.GenericServlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.annotation.WebServlet;
 
+@WebServlet(loadOnStartup = 1)
 public class StartupService extends GenericServlet {
 
     private AliYunDriverCronTask mAliYunDriverCronTask;

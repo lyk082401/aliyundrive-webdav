@@ -1,7 +1,5 @@
 package com.github.zxbu.webdavteambition.store;
 
-import android.content.Context;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.zxbu.webdavteambition.client.AliYunDriverClient;
@@ -22,12 +20,10 @@ import okhttp3.Response;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,11 +39,10 @@ public class AliYunDriverClientService {
         if (sInstance == null) {
             synchronized (AliYunDriverClientService.class) {
                 if (sInstance == null) {
-                    ContextHandler.Context webContext = WebAppContext.getCurrentContext();
-                    Context context = (Context) webContext.getAttribute("org.mortbay.ijetty.context");
                     AliYunDriveProperties properties = new AliYunDriveProperties();
-                    properties.setRefreshToken(String.valueOf(webContext.getAttribute(context.getString(net.xdow.library.R.string.config_refresh_token))));
-                    properties.setWorkDir(context.getFilesDir().getAbsolutePath() + File.separator);
+                    properties.setRefreshToken(System.getProperty("REFRESH_TOKEN"));
+                    String workDir = AliYunDriverClientService.class.getClassLoader().getResource(".").getPath();
+                    properties.setWorkDir(workDir + File.separator);
                     sInstance = new AliYunDriverClientService(new AliYunDriverClient(properties));
                 }
             }

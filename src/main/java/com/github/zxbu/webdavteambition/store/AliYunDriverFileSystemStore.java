@@ -3,6 +3,7 @@ package com.github.zxbu.webdavteambition.store;
 import com.github.zxbu.webdavteambition.model.FileType;
 import com.github.zxbu.webdavteambition.model.PathInfo;
 import com.github.zxbu.webdavteambition.model.result.TFile;
+import com.google.common.net.HttpHeaders;
 import net.sf.webdav.ITransaction;
 import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
@@ -11,12 +12,11 @@ import net.sf.webdav.exceptions.WebdavException;
 import okhttp3.Response;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

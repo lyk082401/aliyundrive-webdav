@@ -2,7 +2,7 @@ package net.sf.webdav;
 
 import java.util.Hashtable;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Wraps the HttpServletResponse class to abstract the specific protocol used.

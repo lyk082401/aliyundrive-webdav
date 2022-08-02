@@ -19,8 +19,10 @@ package net.sf.webdav;
 import java.io.File;
 import java.lang.reflect.Constructor;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
+import jakarta.servlet.annotation.WebInitParam;
+import jakarta.servlet.annotation.WebServlet;
 import net.sf.webdav.exceptions.WebdavException;
 
 /**
@@ -32,6 +34,16 @@ import net.sf.webdav.exceptions.WebdavException;
  * @author Remy Maucherat
  */
 
+@WebServlet(name = "WebdavServlet",
+    initParams = {
+        @WebInitParam(name = "ResourceHandlerImplementation",
+                      value = "com.github.zxbu.webdavteambition.store.AliYunDriverFileSystemStore"),
+        @WebInitParam(name = "rootpath", value = "./"),
+        @WebInitParam(name = "storeDebug", value = "1")
+    },
+    urlPatterns = {"/*"},
+    loadOnStartup = 2
+)
 public class WebdavServlet extends WebDavServletBean {
 
     private static final String ROOTPATH_PARAMETER = "rootpath";

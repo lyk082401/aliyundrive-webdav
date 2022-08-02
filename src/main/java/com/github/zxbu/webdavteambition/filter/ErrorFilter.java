@@ -1,35 +1,39 @@
 package com.github.zxbu.webdavteambition.filter;
 
+import jakarta.servlet.annotation.WebFilter;
 import net.sf.webdav.WebdavStatus;
 
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jetty.webapp.WebAppContext;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
+@WebFilter(urlPatterns = "/*")
 public class ErrorFilter implements Filter {
     private static final String errorPage = readErrorPage();
 
     private static String readErrorPage() {
-        try {
-            InputStream inputStream = WebAppContext.getCurrentContext().getResourceAsStream("/WEB-INF/lib/error.xml");
-            return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException("Error in reading error.xml");
-        }
+        return "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<D:multistatus xmlns:D='DAV:'>\n" +
+                "    <D:response>\n" +
+                "        <D:href></D:href>\n" +
+                "        <D:propstat>\n" +
+                "            <D:status>HTTP/1.1 {{code}} {{message}}</D:status>\n" +
+                "        </D:propstat>\n" +
+                "    </D:response>\n" +
+                "</D:multistatus>";
     }
 
     @Override
