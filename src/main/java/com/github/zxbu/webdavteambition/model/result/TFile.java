@@ -1,5 +1,7 @@
 package com.github.zxbu.webdavteambition.model.result;
 
+import com.github.zxbu.webdavteambition.model.VideoMediaMetaDataInfo;
+
 import java.util.Date;
 import java.util.Objects;
 
@@ -23,6 +25,9 @@ public class TFile {
     private String share_id;
     private String share_password;
     private String origin_file_id;
+    private String thumbnail;
+
+    private VideoMediaMetaDataInfo video_media_metadata;
 
     public Date getCreated_at() {
         return created_at;
@@ -177,5 +182,21 @@ public class TFile {
     public TFile setShare_password(String share_password) {
         this.share_password = share_password;
         return this;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
+    public VideoMediaMetaDataInfo getVideo_media_metadata() {
+        return video_media_metadata;
+    }
+
+    public void setVideo_media_metadata(VideoMediaMetaDataInfo video_media_metadata) {
+        this.video_media_metadata = video_media_metadata;
     }
 }

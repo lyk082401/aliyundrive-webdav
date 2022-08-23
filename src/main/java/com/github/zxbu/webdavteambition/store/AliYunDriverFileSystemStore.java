@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 public class AliYunDriverFileSystemStore implements IWebdavStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(AliYunDriverFileSystemStore.class);
 
-    private static AliYunDriverClientService aliYunDriverClientService = AliYunDriverClientService.getInstance();
+    private static AliYunDriverClientService aliYunDriverClientService = null;
 
     private final Pattern inSharePatten = Pattern.compile(".*!(?<shareId>[a-zA-Z0-9]{11})(?>\\/.|:(?<password>[a-zA-Z0-9]{4})\\/.)");
 

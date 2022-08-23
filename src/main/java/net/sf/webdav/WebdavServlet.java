@@ -38,10 +38,10 @@ import net.sf.webdav.exceptions.WebdavException;
     initParams = {
         @WebInitParam(name = "ResourceHandlerImplementation",
                       value = "com.github.zxbu.webdavteambition.store.AliYunDriverFileSystemStore"),
-        @WebInitParam(name = "rootpath", value = "./"),
+        @WebInitParam(name = "rootpath", value = "./s"),
         @WebInitParam(name = "storeDebug", value = "1")
     },
-    urlPatterns = {"/*"},
+    urlPatterns = {"/s/*"},
     loadOnStartup = 2
 )
 public class WebdavServlet extends WebDavServletBean {

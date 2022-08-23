@@ -20,7 +20,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
-@WebFilter(urlPatterns = "/*")
+@WebFilter(urlPatterns = "/s/*")
 public class ErrorFilter implements Filter {
     private static final String errorPage = readErrorPage();
 

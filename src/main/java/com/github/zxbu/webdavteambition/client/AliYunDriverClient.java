@@ -237,7 +237,7 @@ public class AliYunDriverClient {
         request.setShare_pwd(sharePassword == null ? "" : sharePassword);
         String resultString = post("/share_link/get_share_token", request);
         result = JsonUtil.readValue(resultString, ShareTokenResult.class);
-        shareTokenMapping.put(shareId, result);
+        shareTokenMapping.put(shareId + ":" + sharePassword, result);
         return result.getShare_token();
     }
 

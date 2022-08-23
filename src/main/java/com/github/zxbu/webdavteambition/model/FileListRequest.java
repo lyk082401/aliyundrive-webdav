@@ -8,7 +8,7 @@ public class FileListRequest extends Page{
     private String image_thumbnail_process = "image/resize,w_400/format,jpeg";
     private String image_url_process = "image/resize,w_1920/format,jpeg";
     private String parent_file_id;
-    private String video_thumbnail_process = "video/snapshot,t_0,f_jpg,ar_auto,w_300";
+    private String video_thumbnail_process = "video/snapshot,t_1000,f_jpg,ar_auto,w_300";
 
     public String getShare_id() {
         return share_id;

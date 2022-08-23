@@ -36,6 +36,7 @@ import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
 import net.sf.webdav.WebdavStatus;
 import net.sf.webdav.locking.ResourceLocks;
+import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.io.IOUtils;
 
 public class DoGet extends DoHead {
@@ -73,6 +74,7 @@ public class DoGet extends DoHead {
                     IOUtils.copyLarge(bis, bos);
                     LOG.debug("结束 {}", path);
                 }
+            } catch (ClientAbortException e) {
             } finally {
                 // flushing causes a IOE if a file is opened on the webserver
                 // client disconnected before server finished sending response

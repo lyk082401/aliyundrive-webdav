@@ -10,7 +10,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebServlet;
 
-@WebServlet(loadOnStartup = 1)
+@WebServlet(loadOnStartup = 1, urlPatterns={"/ssss/*"})
 public class StartupService extends GenericServlet {
 
     private AliYunDriverCronTask mAliYunDriverCronTask;
