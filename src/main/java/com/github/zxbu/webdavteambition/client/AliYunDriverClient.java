@@ -17,10 +17,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +26,7 @@ public class AliYunDriverClient {
     private OkHttpClient okHttpClient;
     private AliYunDriveProperties aliYunDriveProperties;
     private Map<String, ShareTokenResult> shareTokenMapping = new HashMap<>();
+    private Runnable onRefreshTokenInvalidListener;
 
     public AliYunDriverClient(AliYunDriveProperties aliYunDriveProperties) {
 
@@ -161,7 +158,14 @@ public class AliYunDriverClient {
         try (Response response = okHttpClient.newCall(request).execute()){
             LOGGER.info("post {}, body {}, code {}", url, bodyAsJson, response.code());
             if (!response.isSuccessful()) {
-                LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), response.body().string());
+                String responseBody = response.body().string();
+                if (responseBody.contains("refresh_token is not valid")) {
+                    Runnable listener = onRefreshTokenInvalidListener;
+                    if (listener != null) {
+                        listener.run();
+                    }
+                }
+                LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), responseBody);
                 throw new WebdavException("请求失败：" + url);
             }
             return toString(response.body());
@@ -177,7 +181,14 @@ public class AliYunDriverClient {
         try (Response response = okHttpClient.newCall(request).execute()){
             LOGGER.info("put {}, code {}", url, response.code());
             if (!response.isSuccessful()) {
-                LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), response.body().string());
+                String responseBody = response.body().string();
+                if (responseBody.contains("refresh_token is not valid")) {
+                    Runnable listener = onRefreshTokenInvalidListener;
+                    if (listener != null) {
+                        listener.run();
+                    }
+                }
+                LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), responseBody);
                 throw new WebdavException("请求失败：" + url);
             }
             return toString(response.body());
@@ -276,5 +287,9 @@ public class AliYunDriverClient {
             LOGGER.warn("写入refreshToken文件 {} 失败: ", refreshTokenFile.getAbsolutePath(), e);
         }
         aliYunDriveProperties.setRefreshToken(newRefreshToken);
+    }
+
+    public void setOnRefreshTokenInvalidListener(Runnable listener) {
+        this.onRefreshTokenInvalidListener = listener;
     }
 }

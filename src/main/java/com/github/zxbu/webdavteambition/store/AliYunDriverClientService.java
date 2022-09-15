@@ -91,7 +91,7 @@ public class AliYunDriverClientService {
                 }
             });
 
-    private final AliYunDriverClient client;
+    public final AliYunDriverClient client;
 
     private VirtualTFileService virtualTFileService = VirtualTFileService.getInstance();
 
