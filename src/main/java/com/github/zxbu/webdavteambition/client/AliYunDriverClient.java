@@ -8,73 +8,92 @@ import net.sf.webdav.exceptions.WebdavException;
 import okhttp3.*;
 
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.web3j.crypto.ECKeyPair;
+import org.web3j.crypto.Hash;
+import org.web3j.crypto.Sign;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class AliYunDriverClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(AliYunDriverClient.class);
-    private static final String REFRESH_TOKEN_FILE_NAME = "refresh-token";
     private OkHttpClient okHttpClient;
-    private AliYunDriveProperties aliYunDriveProperties;
+    public AliYunDriveProperties aliYunDriveProperties;
     private Map<String, ShareTokenResult> shareTokenMapping = new HashMap<>();
     private Runnable onRefreshTokenInvalidListener;
 
     public AliYunDriverClient(AliYunDriveProperties aliYunDriveProperties) {
-
-        OkHttpClient okHttpClient = new OkHttpClient.Builder().addInterceptor(new Interceptor() {
-            @Override
-            public Response intercept(Chain chain) throws IOException {
-                Request request = chain.request();
-                request = request.newBuilder()
-                        .removeHeader("User-Agent")
-                        .addHeader("User-Agent", aliYunDriveProperties.getAgent())
-                        .removeHeader("authorization")
-                        .addHeader("authorization", aliYunDriveProperties.getAuthorization())
-                        .build();
-                return chain.proceed(request);
-            }
-        }).authenticator(new Authenticator() {
-            @Override
-            public Request authenticate(Route route, Response response) throws IOException {
-                if (response.code() == 401 && response.body() != null  && response.body().string().contains("AccessToken")) {
-                    String refreshTokenResult;
-                    try {
-                        refreshTokenResult = post("https://api.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", readRefreshToken()));
-                    } catch (Exception e) {
-                        // 如果置换token失败，先清空原token文件，再尝试一次
-                        deleteRefreshTokenFile();
-                        refreshTokenResult = post("https://api.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", readRefreshToken()));
-                    }
-                    String accessToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "access_token");
-                    String refreshToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "refresh_token");
-                    if (StringUtils.isEmpty(accessToken)) throw new IllegalArgumentException("获取accessToken失败");
-                    if (StringUtils.isEmpty(refreshToken)) throw new IllegalArgumentException("获取refreshToken失败");
-                    aliYunDriveProperties.setAuthorization(accessToken);
-                    writeRefreshToken(refreshToken);
-                    return response.request().newBuilder()
+        try {
+            OkHttpClient okHttpClient = new OkHttpClient.Builder().addInterceptor(new Interceptor() {
+                @Override
+                public Response intercept(Chain chain) throws IOException {
+                    Request request = chain.request();
+                    request = request.newBuilder()
+                            .removeHeader("User-Agent")
+                            .addHeader("User-Agent", aliYunDriveProperties.agent)
                             .removeHeader("authorization")
-                            .header("authorization", accessToken)
+                            .addHeader("authorization", "Bearer\t" + aliYunDriveProperties.authorization)
+                            .addHeader("x-device-id", aliYunDriveProperties.deviceId)
+                            .addHeader("x-signature", aliYunDriveProperties.session.signature + "01")
+                            .addHeader("x-canary", "client=web,app=adrive,version=v3.17.0")
+                            .addHeader("x-request-id", UUID.randomUUID().toString())
                             .build();
+                    return chain.proceed(request);
                 }
-                return null;
-            }
-        })
-                .readTimeout(1, TimeUnit.MINUTES)
-                .writeTimeout(1, TimeUnit.MINUTES)
-                .connectTimeout(1, TimeUnit.MINUTES)
-                .build();
-        this.okHttpClient = okHttpClient;
-        this.aliYunDriveProperties = aliYunDriveProperties;
-        init();
+            }).authenticator(new Authenticator() {
+                @Override
+                public Request authenticate(Route route, Response response) throws IOException {
+                    if (response.code() == 401 && response.body() != null && response.body().string().contains("AccessToken")) {
+                        String refreshTokenResult;
+                        try {
+                            if (StringUtils.isEmpty(aliYunDriveProperties.refreshToken)) {
+                                throw new NullPointerException();
+                            }
+                            refreshTokenResult = post("https://api.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", aliYunDriveProperties.refreshToken));
+                        } catch (Exception e) {
+                            refreshTokenResult = post("https://api.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", aliYunDriveProperties.refreshTokenNext));
+                        }
+                        String accessToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "access_token");
+                        String refreshToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "refresh_token");
+                        String userId = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "user_id");
+                        if (StringUtils.isEmpty(accessToken))
+                            throw new IllegalArgumentException("获取accessToken失败");
+                        if (StringUtils.isEmpty(refreshToken))
+                            throw new IllegalArgumentException("获取refreshToken失败");
+                        if (StringUtils.isEmpty(refreshToken))
+                            throw new IllegalArgumentException("获取userId失败");
+                        aliYunDriveProperties.userId = userId;
+                        aliYunDriveProperties.authorization = accessToken;
+                        aliYunDriveProperties.refreshToken = refreshToken;
+                        aliYunDriveProperties.save();
+                        return response.request().newBuilder()
+                                .removeHeader("authorization")
+                                .header("authorization", accessToken)
+                                .build();
+                    }
+                    return null;
+                }
+            }).readTimeout(1, TimeUnit.MINUTES)
+                    .writeTimeout(1, TimeUnit.MINUTES)
+                    .connectTimeout(1, TimeUnit.MINUTES)
+                    .build();
+            this.okHttpClient = okHttpClient;
+            this.aliYunDriveProperties = aliYunDriveProperties;
+            init();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void login() {
@@ -86,13 +105,13 @@ public class AliYunDriverClient {
         if (getDriveId() == null) {
             String personalJson = post("/user/get", Collections.emptyMap());
             String driveId = (String) JsonUtil.getJsonNodeValue(personalJson, "default_drive_id");
-            aliYunDriveProperties.setDriveId(driveId);
+            aliYunDriveProperties.driveId = driveId;
         }
     }
 
 
     public String getDriveId() {
-        return aliYunDriveProperties.getDriveId();
+        return aliYunDriveProperties.driveId;
     }
 
 
@@ -156,19 +175,24 @@ public class AliYunDriverClient {
         }
         Request request = requestBuilder.build();
         try (Response response = okHttpClient.newCall(request).execute()){
-            LOGGER.info("post {}, body {}, code {}", url, bodyAsJson, response.code());
             if (!response.isSuccessful()) {
-                String responseBody = response.body().string();
-                if (responseBody.contains("refresh_token is not valid")) {
+                String res = "";
+                try {
+                    res = toString(response.body());
+                } catch (Exception e) {
+                }
+                if (res.contains("refresh_token is not valid")) {
                     Runnable listener = onRefreshTokenInvalidListener;
                     if (listener != null) {
                         listener.run();
                     }
                 }
-                LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), responseBody);
+                LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), res);
                 throw new WebdavException("请求失败：" + url);
             }
-            return toString(response.body());
+            String res = toString(response.body());
+            LOGGER.info("post {}, body {}, code {} res {}", url, bodyAsJson, response.code(), res);
+            return res;
         } catch (IOException e) {
             throw new WebdavException(e);
         }
@@ -234,7 +258,7 @@ public class AliYunDriverClient {
         if (url.startsWith("http")) {
             return url;
         }
-        return aliYunDriveProperties.getUrl() + url;
+        return aliYunDriveProperties.url + url;
     }
 
     public synchronized String readShareToken(String shareId, String sharePassword){
@@ -250,43 +274,6 @@ public class AliYunDriverClient {
         result = JsonUtil.readValue(resultString, ShareTokenResult.class);
         shareTokenMapping.put(shareId + ":" + sharePassword, result);
         return result.getShare_token();
-    }
-
-    private void deleteRefreshTokenFile() {
-        new File(aliYunDriveProperties.getWorkDir(), REFRESH_TOKEN_FILE_NAME).delete();
-    }
-
-    private String readRefreshToken() {
-        File refreshTokenFile = new File(aliYunDriveProperties.getWorkDir(), REFRESH_TOKEN_FILE_NAME);
-
-        if (!refreshTokenFile.exists()) {
-            refreshTokenFile.getParentFile().mkdirs();
-            try {
-                FileUtils.write(refreshTokenFile, "", StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                LOGGER.error("Error: touch refreshTokenFile failed", e);
-            }
-        }
-        try {
-            byte[] bytes = FileUtils.readFileToByteArray(refreshTokenFile);
-            if (bytes.length != 0) {
-                return new String(bytes, StandardCharsets.UTF_8);
-            }
-        } catch (IOException e) {
-            LOGGER.warn("读取refreshToken文件 {} 失败: ", refreshTokenFile.getAbsolutePath(), e);
-        }
-        writeRefreshToken(aliYunDriveProperties.getRefreshToken());
-        return aliYunDriveProperties.getRefreshToken();
-    }
-
-    private void writeRefreshToken(String newRefreshToken) {
-        File refreshTokenFile = new File(aliYunDriveProperties.getWorkDir(), REFRESH_TOKEN_FILE_NAME);
-        try {
-            FileUtils.write(refreshTokenFile, newRefreshToken, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            LOGGER.warn("写入refreshToken文件 {} 失败: ", refreshTokenFile.getAbsolutePath(), e);
-        }
-        aliYunDriveProperties.setRefreshToken(newRefreshToken);
     }
 
     public void setOnRefreshTokenInvalidListener(Runnable listener) {

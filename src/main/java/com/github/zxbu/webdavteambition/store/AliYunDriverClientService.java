@@ -45,15 +45,16 @@ public class AliYunDriverClientService {
         if (sInstance == null) {
             synchronized (AliYunDriverClientService.class) {
                 if (sInstance == null) {
-                    AliYunDriveProperties properties = new AliYunDriveProperties();
-                    properties.setRefreshToken(System.getProperty("REFRESH_TOKEN"));
+                    String workDir;
                     File workDirLinux = new File("/root/data");
                     if (workDirLinux.exists()) {
-                        properties.setWorkDir(workDirLinux.getAbsolutePath() + File.separator);
+                        workDir = workDirLinux.getAbsolutePath() + File.separator;
                     } else {
-                        String workDir = AliYunDriverClientService.class.getClassLoader().getResource(".").getPath();
-                        properties.setWorkDir(workDir + File.separator);
+                        workDir = AliYunDriverClientService.class.getClassLoader().getResource(".").getPath() + File.separator;
                     }
+
+                    AliYunDriveProperties properties = AliYunDriveProperties.load(workDir);
+                    properties.workDir = workDir;
                     sInstance = new AliYunDriverClientService(new AliYunDriverClient(properties));
                 }
             }

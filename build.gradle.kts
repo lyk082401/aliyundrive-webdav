@@ -22,4 +22,5 @@ dependencies {
 //    compileOnly ("org.eclipse.jetty:jetty-webapp:8.0.0.v20110901")
 //    compileOnly ("org.mortbay.jetty:servlet-api:3.0.20100224")
 //    compileOnly project(":library")
+    implementation("org.web3j:crypto:4.9.6")
 }
