@@ -3,6 +3,8 @@ package com.github.zxbu.webdavteambition.manager;
 import com.github.zxbu.webdavteambition.client.AliYunDriverClient;
 import com.github.zxbu.webdavteambition.config.AliYunDriveProperties;
 
+import net.sf.webdav.exceptions.WebdavException;
+
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +32,16 @@ public class AliYunSessionManager {
         makeKeyPairIfNeeded();
     }
 
-    private void makeKeyPairIfNeeded() {
+    public void makeKeyPairIfNeeded() {
         AliYunDriveProperties.Session session = this.aliYunDriverClient.aliYunDriveProperties.session;
         if (!session.isEmpty()) {
             return;
         }
+        makeKeyPair();
+    }
+
+    public void makeKeyPair() {
+        AliYunDriveProperties.Session session = this.aliYunDriverClient.aliYunDriveProperties.session;
         BigInteger privateKeyInt = new BigInteger(256, new SecureRandom());
         BigInteger publicKeyInt = Sign.publicKeyFromPrivate(privateKeyInt);
         session.privateKey = privateKeyInt.toString(16);
@@ -63,15 +70,25 @@ public class AliYunSessionManager {
         args.put("modelName", "Windows网页版");
         args.put("pubKey", "04" + session.publicKey);
 
-        String createSessionResult;
+        String createSessionResult = "";
         if (session.nonce >= 1073741823) {
             session.nonce = 0;
         }
         makeSignature(session.nonce);
-        if (session.nonce == 0) {
-            createSessionResult = this.aliYunDriverClient.post("https://api.aliyundrive.com/users/v1/users/device/create_session", args);
-        } else {
-            createSessionResult = this.aliYunDriverClient.post("https://api.aliyundrive.com/users/v1/users/device/renew_session", args);
+        try {
+            if (session.nonce == 0) {
+                createSessionResult = this.aliYunDriverClient.post("https://api.aliyundrive.com/users/v1/users/device/create_session", args);
+            } else {
+                createSessionResult = this.aliYunDriverClient.post("https://api.aliyundrive.com/users/v1/users/device/renew_session", args);
+            }
+        } catch (WebdavException e) {
+            if (e.responseMessage != null) {
+                if (e.responseMessage.contains("DeviceSessionSignatureInvalid")
+                    ||e.responseMessage.contains("UserDeviceOffline")){
+                    makeKeyPair();
+                    createSessionResult = this.aliYunDriverClient.post("https://api.aliyundrive.com/users/v1/users/device/create_session", args);
+                }
+            }
         }
         if (createSessionResult.contains("\"result\":false")) {
             LOGGER.error("登录设备过多, 请进入\"登录设备管理\", 退出一些设备。");
@@ -95,7 +112,7 @@ public class AliYunSessionManager {
                 }
                 updateSession();
             }
-        }, 10, 60, TimeUnit.SECONDS);
+        }, 10, 1, TimeUnit.SECONDS);
     }
 
     public void stop() {
