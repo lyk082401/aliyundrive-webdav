@@ -31,7 +31,7 @@ import java.util.Set;
 public class AliYunDriverFileSystemStore implements IWebdavStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(AliYunDriverFileSystemStore.class);
 
-    private static AliYunDriverClientService aliYunDriverClientService = AliYunDriverClientService.getInstance();
+    private static AliYunDriverClientService aliYunDriverClientService;
 
     public AliYunDriverFileSystemStore(File file) {
     }
@@ -40,13 +40,9 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
         AliYunDriverFileSystemStore.aliYunDriverClientService = aliYunDriverClientService;
     }
 
-
-
-
     @Override
     public void destroy() {
         LOGGER.info("destroy");
-
     }
 
     @Override

@@ -15,6 +15,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -36,9 +40,11 @@ dependencies {
     implementation 'commons-io:commons-io:2.6' //java7
     implementation 'com.fasterxml.jackson.core:jackson-core:2.11.3'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.3'
-    compileOnly 'org.slf4j:slf4j-api:1.7.32'
-    compileOnly 'org.slf4j:slf4j-android:1.7.32'
+    compileOnly 'org.slf4j:slf4j-api:1.7.30'
+    compileOnly 'org.slf4j:slf4j-android:1.7.30'
     compileOnly 'org.eclipse.jetty:jetty-webapp:8.0.0.v20110901'
     compileOnly 'org.mortbay.jetty:servlet-api:3.0.20100224'
     compileOnly project(':library')
+    implementation("org.web3j:crypto:4.8.8-android")
+
 }

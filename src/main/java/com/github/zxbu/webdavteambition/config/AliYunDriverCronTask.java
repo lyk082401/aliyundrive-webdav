@@ -28,13 +28,13 @@ public class AliYunDriverCronTask {
      */
     public void refreshToken() {
         try {
-            LOGGER.info("定时刷新 Refresh Token 任务开始");
+            LOGGER.info("定时刷新 Refresh Token ↓↓↓↓↓");
             TFile root = mAliYunDriverClientService.getTFileByPath("/");
             mAliYunDriverClientService.getTFiles(root.getFile_id());
         } catch (Throwable e) {
             LOGGER.error("", e);
         } finally {
-            LOGGER.info("定时刷新 Refresh Token 任务结束");
+            LOGGER.info("定时刷新 Refresh Token ↑↑↑↑↑");
         }
     }
 

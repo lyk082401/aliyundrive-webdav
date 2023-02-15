@@ -45,9 +45,11 @@ public class AliYunDriverClientService {
                 if (sInstance == null) {
                     ContextHandler.Context webContext = WebAppContext.getCurrentContext();
                     Context context = (Context) webContext.getAttribute("org.mortbay.ijetty.context");
-                    AliYunDriveProperties properties = new AliYunDriveProperties();
-                    properties.setRefreshToken(String.valueOf(webContext.getAttribute(context.getString(net.xdow.library.R.string.config_refresh_token))));
-                    properties.setWorkDir(context.getFilesDir().getAbsolutePath() + File.separator);
+                    AliYunDriveProperties properties = AliYunDriveProperties.load(context.getFilesDir().getAbsolutePath() + File.separator);
+                    properties.refreshTokenNext = String.valueOf(webContext.getAttribute(context.getString(net.xdow.library.R.string.config_refresh_token)));
+                    properties.deviceId = String.valueOf(webContext.getAttribute(context.getString(net.xdow.library.R.string.config_device_id)));
+                    properties.workDir = context.getFilesDir().getAbsolutePath() + File.separator;
+                    properties.save();
                     sInstance = new AliYunDriverClientService(new AliYunDriverClient(properties));
                 }
             }
@@ -73,7 +75,7 @@ public class AliYunDriverClientService {
                 }
             });
 
-    private final AliYunDriverClient client;
+    public final AliYunDriverClient client;
 
     private VirtualTFileService virtualTFileService = VirtualTFileService.getInstance();
 
