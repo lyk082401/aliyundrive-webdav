@@ -18,6 +18,8 @@ package net.sf.webdav.exceptions;
 
 public class WebdavException extends RuntimeException {
 
+    public String responseMessage;
+
     public WebdavException() {
         super();
     }
@@ -32,5 +34,10 @@ public class WebdavException extends RuntimeException {
 
     public WebdavException(Throwable cause) {
         super(cause);
+    }
+
+    public WebdavException withResponseMessage(String responseMessage) {
+        this.responseMessage = responseMessage;
+        return this;
     }
 }

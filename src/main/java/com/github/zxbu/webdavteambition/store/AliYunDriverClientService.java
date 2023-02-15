@@ -262,7 +262,19 @@ public class AliYunDriverClientService {
         renameRequest.setDrive_id(client.getDriveId());
         renameRequest.setFile_id(tFile.getFile_id());
         renameRequest.setName(newName);
-        client.post("/file/update", renameRequest);
+        try {
+            client.post("/file/update", renameRequest);
+        } catch (WebdavException e) {
+            String res = e.responseMessage;
+            if (StringUtils.isEmpty(res)) {
+                throw e;
+            }
+            if (!res.contains("AlreadyExist.File")) {
+                throw e;
+            }
+            remove(getNodeIdByParentId(tFile.getParent_file_id(), newName));
+            client.post("/file/update", renameRequest);
+        }
         clearCache();
     }
 
@@ -283,6 +295,10 @@ public class AliYunDriverClientService {
     public void remove(String path) {
         path = normalizingPath(path);
         TFile tFile = getTFileByPath(path);
+        remove(tFile);
+    }
+
+    public void remove(TFile tFile) {
         if (tFile == null) {
             return;
         }
@@ -390,14 +406,13 @@ public class AliYunDriverClientService {
         return rootTFile;
     }
 
-    private TFile getNodeIdByParentId(String parentId, String name) {
+    public TFile getNodeIdByParentId(String parentId, String name) {
         Set<TFile> tFiles = getTFiles(parentId);
         for (TFile tFile : tFiles) {
             if (tFile.getName().equals(name)) {
                 return tFile;
             }
         }
-
         return null;
     }
 

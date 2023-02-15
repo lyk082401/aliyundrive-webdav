@@ -1,6 +1,7 @@
 package com.github.zxbu.webdavteambition.model;
 
 public class RenameRequest {
+    //refuse auto_rename
     private String check_name_mode = "refuse";
     private String drive_id;
     private String name;
