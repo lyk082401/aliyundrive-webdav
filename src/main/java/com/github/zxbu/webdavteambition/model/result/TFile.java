@@ -2,6 +2,7 @@ package com.github.zxbu.webdavteambition.model.result;
 
 import com.github.zxbu.webdavteambition.model.VideoMediaMetaDataInfo;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Objects;
 
@@ -27,6 +28,7 @@ public class TFile {
     private String origin_file_id;
     private String thumbnail;
 
+    @Nullable
     private VideoMediaMetaDataInfo video_media_metadata;
 
     public Date getCreated_at() {
@@ -192,11 +194,12 @@ public class TFile {
         this.thumbnail = thumbnail;
     }
 
+    @Nullable
     public VideoMediaMetaDataInfo getVideo_media_metadata() {
         return video_media_metadata;
     }
 
-    public void setVideo_media_metadata(VideoMediaMetaDataInfo video_media_metadata) {
+    public void setVideo_media_metadata(@Nullable VideoMediaMetaDataInfo video_media_metadata) {
         this.video_media_metadata = video_media_metadata;
     }
 }
