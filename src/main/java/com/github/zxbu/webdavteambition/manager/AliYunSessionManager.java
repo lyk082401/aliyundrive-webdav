@@ -4,6 +4,7 @@ import com.github.zxbu.webdavteambition.client.AliYunDriverClient;
 import com.github.zxbu.webdavteambition.config.AliYunDriveProperties;
 
 import net.sf.webdav.exceptions.WebdavException;
+import net.xdow.aliyundriver.BuildConfig;
 
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
@@ -22,6 +23,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class AliYunSessionManager {
+
+    public static final int SIGN_EXPIRED_TIME_SEC = 60 * 5; //5min
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AliYunSessionManager.class);
 
     private final AliYunDriverClient aliYunDriverClient;
@@ -60,7 +64,7 @@ public class AliYunSessionManager {
         Sign.SignatureData signatureInfo = Sign.signMessage(dataHash, keyPair, false);
         session.signature = Hex.toHexString(signatureInfo.getR()) + Hex.toHexString(signatureInfo.getS());
         session.nonce = nonce;
-        session.expireTimeSec = System.currentTimeMillis() / 1000 + (3600*23);
+        session.expireTimeSec = System.currentTimeMillis() / 1000 + SIGN_EXPIRED_TIME_SEC;
     }
 
     public void updateSession() {
@@ -100,7 +104,6 @@ public class AliYunSessionManager {
         this.aliYunDriverClient.aliYunDriveProperties.save();
     }
 
-
     public void start() {
         updateSession();
         mTaskPool.scheduleAtFixedRate(new Runnable() {
@@ -112,7 +115,7 @@ public class AliYunSessionManager {
                 }
                 updateSession();
             }
-        }, 10, 1, TimeUnit.SECONDS);
+        }, 10, 10, TimeUnit.SECONDS);
     }
 
     public void stop() {
