@@ -4,7 +4,6 @@ import com.github.zxbu.webdavteambition.client.AliYunDriverClient;
 import com.github.zxbu.webdavteambition.config.AliYunDriveProperties;
 
 import net.sf.webdav.exceptions.WebdavException;
-import net.xdow.aliyundriver.BuildConfig;
 
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
@@ -69,9 +68,14 @@ public class AliYunSessionManager {
 
     public void updateSession() {
         AliYunDriveProperties.Session session = this.aliYunDriverClient.aliYunDriveProperties.session;
+        String OS_NAME = System.getProperty("os.name");
         Map<String, String> args = new HashMap<>();
-        args.put("deviceName", "Edge浏览器");
-        args.put("modelName", "Windows网页版");
+        args.put("deviceName", "Webdav");
+        if (OS_NAME.contains("Windows")) {
+            args.put("modelName", OS_NAME);
+        } else {
+            args.put("modelName", OS_NAME + " " + System.getProperty("os.version"));
+        }
         args.put("pubKey", "04" + session.publicKey);
 
         String createSessionResult = "";
