@@ -41,10 +41,11 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-core:2.11.3'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.3'
     compileOnly 'org.slf4j:slf4j-api:1.7.30'
-    compileOnly 'org.slf4j:slf4j-android:1.7.30'
     compileOnly 'org.eclipse.jetty:jetty-webapp:8.0.0.v20110901'
     compileOnly 'org.mortbay.jetty:servlet-api:3.0.20100224'
     compileOnly project(':library')
-    implementation("org.web3j:crypto:4.8.8-android")
+    implementation("org.web3j:crypto:4.8.8-android") {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
 
 }
