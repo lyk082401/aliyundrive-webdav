@@ -34,23 +34,48 @@ public class AliYunDriverClient {
     private Map<String, ShareTokenResult> shareTokenMapping = new HashMap<>();
     private Runnable onRefreshTokenInvalidListener;
 
+    public Request buildCommonRequestHeader(Request request) {
+        return request.newBuilder()
+                .removeHeader("User-Agent")
+                .addHeader("User-Agent", aliYunDriveProperties.agent)
+                .removeHeader("authorization")
+                .addHeader("authorization", "Bearer\t" + aliYunDriveProperties.authorization)
+                .removeHeader("x-device-id")
+                .addHeader("x-device-id", aliYunDriveProperties.deviceId)
+                .removeHeader("x-signature")
+                .addHeader("x-signature", aliYunDriveProperties.session.signature + "01")
+                .removeHeader("x-canary")
+                .addHeader("x-canary", "client=web,app=adrive,version=v3.17.0")
+                .removeHeader("x-request-id")
+                .addHeader("x-request-id", UUID.randomUUID().toString())
+                .build();
+    }
+
     public AliYunDriverClient(AliYunDriveProperties aliYunDriveProperties) {
         try {
             OkHttpClient okHttpClient = new OkHttpClient.Builder().addInterceptor(new Interceptor() {
                 @Override
                 public Response intercept(Chain chain) throws IOException {
                     Request request = chain.request();
-                    request = request.newBuilder()
-                            .removeHeader("User-Agent")
-                            .addHeader("User-Agent", aliYunDriveProperties.agent)
-                            .removeHeader("authorization")
-                            .addHeader("authorization", "Bearer\t" + aliYunDriveProperties.authorization)
-                            .addHeader("x-device-id", aliYunDriveProperties.deviceId)
-                            .addHeader("x-signature", aliYunDriveProperties.session.signature + "01")
-                            .addHeader("x-canary", "client=web,app=adrive,version=v3.17.0")
-                            .addHeader("x-request-id", UUID.randomUUID().toString())
-                            .build();
-                    return chain.proceed(request);
+                    Response response = chain.proceed(buildCommonRequestHeader(request));
+                    int code = response.code();
+                    if (code == 400 || code == 401) {
+                        ResponseBody body = response.peekBody(40960);
+                        String res = body.string();
+                        String url = request.url().toString();
+                         if ((!url.endsWith("/renew_session")) && res.contains("DeviceSessionSignatureInvalid")) {
+                            AliYunSessionManager mgr = new AliYunSessionManager(AliYunDriverClient.this);
+                            mgr.updateSession();
+                            return chain.proceed(buildCommonRequestHeader(request));
+                        } else if (res.contains("UserDeviceOffline")) {
+                            AliYunDriverClient.this.aliYunDriveProperties.session.nonce = 0;
+                            AliYunDriverClient.this.aliYunDriveProperties.session.expireTimeSec = 0;
+                            AliYunDriverClient.this.aliYunDriveProperties.save();
+                            LOGGER.error("登录设备过多, 请进入\"登录设备管理\", 退出一些设备。");
+                            return response;
+                        }
+                    }
+                    return response;
                 }
             }).authenticator(new Authenticator() {
                 @Override
@@ -86,21 +111,7 @@ public class AliYunDriverClient {
                                     .removeHeader("authorization")
                                     .header("authorization", accessToken)
                                     .build();
-                        } else if (res.contains("DeviceSessionSignatureInvalid")) {
-                            AliYunSessionManager mgr = new AliYunSessionManager(AliYunDriverClient.this);
-                            mgr.makeKeyPair();
-                            return response.request().newBuilder()
-                                    .removeHeader("x-signature")
-                                    .header("x-signature", aliYunDriveProperties.session.signature + "01")
-                                    .build();
-                        } else if (res.contains("UserDeviceOffline")) {
-                            AliYunDriverClient.this.aliYunDriveProperties.session.nonce = 0;
-                            AliYunDriverClient.this.aliYunDriveProperties.session.expireTimeSec = 0;
-                            AliYunDriverClient.this.aliYunDriveProperties.save();
-                            LOGGER.error("登录设备过多, 请进入\"登录设备管理\", 退出一些设备。");
-                            return null;
                         }
-
                     }
                     return null;
                 }
