@@ -73,8 +73,7 @@ public class DoPut extends AbstractMethod {
                 return; // resource is locked
             }
 
-            String tempLockOwner = "doPut" + System.currentTimeMillis()
-                    + req.toString();
+            String tempLockOwner = "doPut" + System.currentTimeMillis() + String.valueOf(req);
             if (_resourceLocks.lock(transaction, path, tempLockOwner, false, 0,
                     TEMP_TIMEOUT, TEMPORARY)) {
                 StoredObject parentSo, so = null;

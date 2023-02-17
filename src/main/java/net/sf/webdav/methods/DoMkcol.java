@@ -67,8 +67,7 @@ public class DoMkcol extends AbstractMethod {
                 return;
             }
 
-            String tempLockOwner = "doMkcol" + System.currentTimeMillis()
-                    + req.toString();
+            String tempLockOwner = "doMkcol" + System.currentTimeMillis() + String.valueOf(req);
 
             if (_resourceLocks.lock(transaction, path, tempLockOwner, false, 0,
                     TEMP_TIMEOUT, TEMPORARY)) {

@@ -75,8 +75,7 @@ public class DoMove extends AbstractMethod {
                 return;
             }
 
-            String tempLockOwner = "doMove" + System.currentTimeMillis()
-                    + req.toString();
+            String tempLockOwner = "doMove" + System.currentTimeMillis() + String.valueOf(req);
 
             if (_resourceLocks.lock(transaction, sourcePath, tempLockOwner,
                     false, 0, TEMP_TIMEOUT, TEMPORARY)) {

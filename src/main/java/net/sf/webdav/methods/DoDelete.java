@@ -68,8 +68,7 @@ public class DoDelete extends AbstractMethod {
                 return; // resource is locked
             }
 
-            String tempLockOwner = "doDelete" + System.currentTimeMillis()
-                    + req.toString();
+            String tempLockOwner = "doDelete" + System.currentTimeMillis() + String.valueOf(req);
             if (_resourceLocks.lock(transaction, path, tempLockOwner, false, 0,
                     TEMP_TIMEOUT, TEMPORARY)) {
                 try {

@@ -89,8 +89,7 @@ public class DoPropfind extends AbstractMethod {
 
         // Retrieve the resources
         String path = getCleanPath(getRelativePath(req));
-        String tempLockOwner = "doPropfind" + System.currentTimeMillis()
-                + req.toString();
+        String tempLockOwner = "doPropfind" + System.currentTimeMillis() + String.valueOf(req);
         _depth = getDepth(req);
 
         if (_resourceLocks.lock(transaction, path, tempLockOwner, false,

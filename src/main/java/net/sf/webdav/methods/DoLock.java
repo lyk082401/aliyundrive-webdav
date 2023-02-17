@@ -104,8 +104,7 @@ public class DoLock extends AbstractMethod {
                 _lockOwner = _userAgent.concat(timeString);
             }
 
-            String tempLockOwner = "doLock" + System.currentTimeMillis()
-                    + req.toString();
+            String tempLockOwner = "doLock" + System.currentTimeMillis() + String.valueOf(req);
             if (_resourceLocks.lock(transaction, _path, tempLockOwner, false,
                     0, TEMP_TIMEOUT, TEMPORARY)) {
                 try {
