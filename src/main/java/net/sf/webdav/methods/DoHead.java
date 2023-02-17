@@ -59,7 +59,6 @@ public class DoHead extends AbstractMethod {
             HttpServletResponse resp) throws IOException, LockFailedException {
 
         // determines if the uri exists.
-
         boolean bUriExists = false;
 
         String path = getRelativePath(req);
@@ -96,8 +95,7 @@ public class DoHead extends AbstractMethod {
                 return;
             }
 
-            String tempLockOwner = "doGet" + System.currentTimeMillis()
-                    + req.toString();
+            String tempLockOwner = "doGet" + System.currentTimeMillis() + String.valueOf(req);
 
             if (_resourceLocks.lock(transaction, path, tempLockOwner, false, 0,
                     TEMP_TIMEOUT, TEMPORARY)) {

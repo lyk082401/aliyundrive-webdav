@@ -47,8 +47,7 @@ public class DoOptions extends DeterminableMethod {
 
         LOG.trace("-- " + this.getClass().getName());
 
-        String tempLockOwner = "doOptions" + System.currentTimeMillis()
-                + req.toString();
+        String tempLockOwner = "doOptions" + System.currentTimeMillis() + String.valueOf(req);
         String path = getRelativePath(req);
         if (_resourceLocks.lock(transaction, path, tempLockOwner, false, 0,
                 TEMP_TIMEOUT, TEMPORARY)) {

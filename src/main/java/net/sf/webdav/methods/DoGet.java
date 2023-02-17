@@ -15,6 +15,8 @@
  */
 package net.sf.webdav.methods;
 
+import com.google.common.net.UrlEscapers;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;

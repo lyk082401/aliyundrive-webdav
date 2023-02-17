@@ -73,8 +73,7 @@ public class DoProppatch extends AbstractMethod {
         // everything is fine, but doesn't do anything.
 
         // Retrieve the resources
-        String tempLockOwner = "doProppatch" + System.currentTimeMillis()
-                + req.toString();
+        String tempLockOwner = "doProppatch" + System.currentTimeMillis() + String.valueOf(req);
 
         if (_resourceLocks.lock(transaction, path, tempLockOwner, false, 0,
                 TEMP_TIMEOUT, TEMPORARY)) {

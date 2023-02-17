@@ -39,8 +39,7 @@ public class DoUnlock extends DeterminableMethod {
         } else {
 
             String path = getRelativePath(req);
-            String tempLockOwner = "doUnlock" + System.currentTimeMillis()
-                    + req.toString();
+            String tempLockOwner = "doUnlock" + System.currentTimeMillis() + String.valueOf(req);
             try {
                 if (_resourceLocks.lock(transaction, path, tempLockOwner,
                         false, 0, TEMP_TIMEOUT, TEMPORARY)) {

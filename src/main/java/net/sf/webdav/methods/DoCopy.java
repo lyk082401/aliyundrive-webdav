@@ -58,8 +58,7 @@ public class DoCopy extends AbstractMethod {
         String path = getRelativePath(req);
         if (!_readOnly) {
 
-            String tempLockOwner = "doCopy" + System.currentTimeMillis()
-                    + req.toString();
+            String tempLockOwner = "doCopy" + System.currentTimeMillis() + String.valueOf(req);
             if (_resourceLocks.lock(transaction, path, tempLockOwner, false, 0,
                     TEMP_TIMEOUT, TEMPORARY)) {
                 try {
@@ -147,9 +146,7 @@ public class DoCopy extends AbstractMethod {
         }
 
         // Overwriting the destination
-        String lockOwner = "copyResource" + System.currentTimeMillis()
-                + req.toString();
-
+        String lockOwner = "copyResource" + System.currentTimeMillis() + String.valueOf(req);
         if (_resourceLocks.lock(transaction, destinationPath, lockOwner, false,
                 0, TEMP_TIMEOUT, TEMPORARY)) {
             StoredObject copySo, destinationSo = null;
