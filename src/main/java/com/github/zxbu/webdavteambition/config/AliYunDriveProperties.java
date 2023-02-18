@@ -17,7 +17,7 @@ public class AliYunDriveProperties {
     private static final String META_FILE_NAME = "meta.json";
 
     public String url = "https://api.aliyundrive.com/v2";
-    public String authorization = "";
+    public transient String authorization = "";
     public String refreshToken;
     public String refreshTokenNext;
     public String workDir = "/etc/aliyun-driver/";
@@ -29,7 +29,7 @@ public class AliYunDriveProperties {
     public Session session = new Session();
 
     public void save() {
-        String json = JsonUtil.toJson(this);
+        String json = JsonUtil.toJsonPretty(this);
         File metaFile = new File(workDir, META_FILE_NAME);
         if (!metaFile.exists()) {
             metaFile.getParentFile().mkdirs();
