@@ -353,7 +353,7 @@ public class AliYunDriverClientService {
         String json = client.post("/file/get_download_url", downloadRequest);
         Object url = JsonUtil.getJsonNodeValue(json, "url");
         LOGGER.debug("{} url = {}", path, url);
-        return client.download(url.toString(), request, size);
+        return client.download(url.toString().replaceAll("^https://", "http://"), request, size);
     }
 
     private TFile getNodeIdByPath2(String path) {
