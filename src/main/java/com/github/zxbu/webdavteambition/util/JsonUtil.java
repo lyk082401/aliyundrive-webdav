@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.webdav.exceptions.WebdavException;
 
@@ -15,9 +16,21 @@ import java.util.List;
 public class JsonUtil {
     private static ObjectMapper objectMapper = new ObjectMapper();
 
+    static {
+        objectMapper.configure(MapperFeature.PROPAGATE_TRANSIENT_MARKER, true);
+    }
+
     public static String toJson(Object o) {
         try {
             return objectMapper.writeValueAsString(o);
+        } catch (JsonProcessingException e) {
+            throw new WebdavException(e);
+        }
+    };
+
+    public static String toJsonPretty(Object o) {
+        try {
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(o);
         } catch (JsonProcessingException e) {
             throw new WebdavException(e);
         }

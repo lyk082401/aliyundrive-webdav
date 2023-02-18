@@ -54,6 +54,7 @@ public class AliYunDriverClientService {
                     }
 
                     AliYunDriveProperties properties = AliYunDriveProperties.load(workDir);
+                    properties.authorization = null;
                     properties.refreshTokenNext = System.getProperty("REFRESH_TOKEN");
                     properties.workDir = workDir;
                     if (StringUtils.isEmpty(properties.deviceId)) {

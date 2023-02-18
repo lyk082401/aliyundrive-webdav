@@ -35,11 +35,9 @@ public class AliYunDriverClient {
     private Runnable onRefreshTokenInvalidListener;
 
     public Request buildCommonRequestHeader(Request request) {
-        return request.newBuilder()
+        Request.Builder builder = request.newBuilder()
                 .removeHeader("User-Agent")
                 .addHeader("User-Agent", aliYunDriveProperties.agent)
-                .removeHeader("authorization")
-                .addHeader("authorization", "Bearer\t" + aliYunDriveProperties.authorization)
                 .removeHeader("x-device-id")
                 .addHeader("x-device-id", aliYunDriveProperties.deviceId)
                 .removeHeader("x-signature")
@@ -47,8 +45,13 @@ public class AliYunDriverClient {
                 .removeHeader("x-canary")
                 .addHeader("x-canary", "client=web,app=adrive,version=v3.17.0")
                 .removeHeader("x-request-id")
-                .addHeader("x-request-id", UUID.randomUUID().toString())
-                .build();
+                .addHeader("x-request-id", UUID.randomUUID().toString());
+
+                builder.removeHeader("authorization");
+                if (!StringUtils.isEmpty(aliYunDriveProperties.authorization)) {
+                    builder.addHeader("authorization", "Bearer\t" + aliYunDriveProperties.authorization);
+                }
+        return builder.build();
     }
 
     public AliYunDriverClient(AliYunDriveProperties aliYunDriveProperties) {
@@ -72,6 +75,20 @@ public class AliYunDriverClient {
                             AliYunDriverClient.this.aliYunDriveProperties.session.expireTimeSec = 0;
                             AliYunDriverClient.this.aliYunDriveProperties.save();
                             LOGGER.error("登录设备过多, 请进入\"登录设备管理\", 退出一些设备。");
+                            if (!url.endsWith("/token/refresh")) {
+                                requestAuthorization();
+                                Response retryResponse = chain.proceed(buildCommonRequestHeader(request));
+                                ResponseBody retryBody = response.peekBody(40960);
+                                String retryRes = retryBody.string();
+                                if (retryRes.contains("UserDeviceOffline")) {
+                                    LOGGER.error("重新登录失败, 设备数过多, 等待30分钟...");
+                                    //防止请求数过多
+                                    try {
+                                        TimeUnit.MINUTES.sleep(30);
+                                    } catch (InterruptedException e) {
+                                    }
+                                }
+                            }
                             return response;
                         }
                     }
@@ -85,28 +102,7 @@ public class AliYunDriverClient {
                         ResponseBody body = response.peekBody(40960);
                         String res = body.string();
                         if (res.contains("AccessToken")) {
-                            String refreshTokenResult;
-                            try {
-                                if (StringUtils.isEmpty(aliYunDriveProperties.refreshToken)) {
-                                    throw new NullPointerException();
-                                }
-                                refreshTokenResult = post("https://api.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", aliYunDriveProperties.refreshToken));
-                            } catch (Exception e) {
-                                refreshTokenResult = post("https://api.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", aliYunDriveProperties.refreshTokenNext));
-                            }
-                            String accessToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "access_token");
-                            String refreshToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "refresh_token");
-                            String userId = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "user_id");
-                            if (StringUtils.isEmpty(accessToken))
-                                throw new IllegalArgumentException("获取accessToken失败");
-                            if (StringUtils.isEmpty(refreshToken))
-                                throw new IllegalArgumentException("获取refreshToken失败");
-                            if (StringUtils.isEmpty(refreshToken))
-                                throw new IllegalArgumentException("获取userId失败");
-                            aliYunDriveProperties.userId = userId;
-                            aliYunDriveProperties.authorization = accessToken;
-                            aliYunDriveProperties.refreshToken = refreshToken;
-                            aliYunDriveProperties.save();
+                            String accessToken = requestAuthorization();
                             return response.request().newBuilder()
                                     .removeHeader("authorization")
                                     .header("authorization", accessToken)
@@ -125,6 +121,33 @@ public class AliYunDriverClient {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String requestAuthorization() {
+        String refreshTokenResult;
+        aliYunDriveProperties.authorization = null;
+        try {
+            if (StringUtils.isEmpty(aliYunDriveProperties.refreshToken)) {
+                throw new NullPointerException();
+            }
+            refreshTokenResult = post("https://api.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", aliYunDriveProperties.refreshToken));
+        } catch (Exception e) {
+            refreshTokenResult = post("https://api.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", aliYunDriveProperties.refreshTokenNext));
+        }
+        String accessToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "access_token");
+        String refreshToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "refresh_token");
+        String userId = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "user_id");
+        if (StringUtils.isEmpty(accessToken))
+            throw new IllegalArgumentException("获取accessToken失败");
+        if (StringUtils.isEmpty(refreshToken))
+            throw new IllegalArgumentException("获取refreshToken失败");
+        if (StringUtils.isEmpty(refreshToken))
+            throw new IllegalArgumentException("获取userId失败");
+        aliYunDriveProperties.userId = userId;
+        aliYunDriveProperties.authorization = accessToken;
+        aliYunDriveProperties.refreshToken = refreshToken;
+        aliYunDriveProperties.save();
+        return accessToken;
     }
 
     private void login() {
