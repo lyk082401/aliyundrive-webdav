@@ -443,7 +443,7 @@ public class AliYunDriverClientService {
             }
 
             LOGGER.debug("{} url = {}", path, url);
-            return client.download(url, request, size);
+            return client.download(url.replaceAll("^https://", "http://"), request, size);
         }
     }
 
