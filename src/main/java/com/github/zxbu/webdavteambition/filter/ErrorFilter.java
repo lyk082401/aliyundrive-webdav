@@ -61,16 +61,16 @@ public class ErrorFilter implements Filter {
                     message = WebdavStatus.getStatusText(status);
                 }
                 String errorXml = errorPage.replace("{{code}}", status + "").replace("{{message}}", message);
-                httpServletResponse.getWriter().write(errorXml);
+                httpServletResponse.getOutputStream().write(errorXml.getBytes(StandardCharsets.UTF_8));
             }
             httpServletResponse.flushBuffer();
         } catch (Throwable t) {
-            httpServletResponse.setStatus(500);
             try {
-                httpServletResponse.getWriter().write(String.valueOf(t.getMessage()));
-            } catch (Throwable ignore) {
+                httpServletResponse.setStatus(500);
+                httpServletResponse.getOutputStream().write(String.valueOf(t.getMessage()).getBytes(StandardCharsets.UTF_8));
+                httpServletResponse.flushBuffer();
+            } catch (IOException e) {
             }
-            httpServletResponse.flushBuffer();
         }
     }
 
