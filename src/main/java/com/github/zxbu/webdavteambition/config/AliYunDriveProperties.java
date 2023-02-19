@@ -20,7 +20,7 @@ public class AliYunDriveProperties {
     public transient String authorization = "";
     public String refreshToken;
     public String refreshTokenNext;
-    public String workDir = "/etc/aliyun-driver/";
+    public transient String workDir = "./conf/";
     public String agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_0_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36";
     public String driveId;
     public String userId;
@@ -55,7 +55,7 @@ public class AliYunDriveProperties {
         return new AliYunDriveProperties();
     }
 
-    public class Session {
+    public static class Session {
         public String privateKey;
         public String publicKey;
         public String signature;
