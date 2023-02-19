@@ -47,5 +47,6 @@ dependencies {
     implementation("org.web3j:crypto:4.8.8-android") {
         exclude group: 'org.slf4j', module: 'slf4j-api'
     }
-
+    compileOnly("org.projectlombok:lombok:1.18.26")
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
 }
