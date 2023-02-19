@@ -56,6 +56,7 @@ public class AliYunDriverClientService {
                     AliYunDriveProperties properties = AliYunDriveProperties.load(workDir);
                     properties.authorization = null;
                     properties.refreshTokenNext = System.getProperty("REFRESH_TOKEN");
+                    properties.deviceName = System.getProperty("DEVICE_NAME");
                     properties.workDir = workDir;
                     if (StringUtils.isEmpty(properties.deviceId)) {
                         properties.deviceId = UUID.randomUUID().toString().replace("-", "").substring(0, 24);

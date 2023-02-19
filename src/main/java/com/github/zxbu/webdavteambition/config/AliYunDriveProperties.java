@@ -25,6 +25,7 @@ public class AliYunDriveProperties {
     public String driveId;
     public String userId;
     public String deviceId;
+    public String deviceName = "Webdav";
     public String appId = "5dde4e1bdf9e4966b387ba58f4b3fdc3";
     public Session session = new Session();
 

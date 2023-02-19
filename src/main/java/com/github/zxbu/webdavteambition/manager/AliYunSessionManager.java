@@ -67,10 +67,11 @@ public class AliYunSessionManager {
     }
 
     public void updateSession() {
-        AliYunDriveProperties.Session session = this.aliYunDriverClient.aliYunDriveProperties.session;
+        AliYunDriveProperties properties = this.aliYunDriverClient.aliYunDriveProperties;
+        AliYunDriveProperties.Session session = properties.session;
         String OS_NAME = System.getProperty("os.name");
         Map<String, String> args = new HashMap<>();
-        args.put("deviceName", "Webdav");
+        args.put("deviceName", properties.deviceName);
         if (OS_NAME.contains("Windows")) {
             args.put("modelName", OS_NAME);
         } else {
