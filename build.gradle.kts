@@ -23,4 +23,6 @@ dependencies {
 //    compileOnly ("org.mortbay.jetty:servlet-api:3.0.20100224")
 //    compileOnly project(":library")
     implementation("org.web3j:crypto:4.9.6")
+    compileOnly("org.projectlombok:lombok:1.18.26")
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
 }
