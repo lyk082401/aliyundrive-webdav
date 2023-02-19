@@ -90,9 +90,13 @@ public class DoGet extends DoHead {
                 IOUtils.closeQuietly(out);
             }
         } catch (Exception e) {
-            LOG.warn("{} doBody causes Exception!\n", path
-                    ,e);
-            LOG.trace(e.toString());
+            String message = e.getMessage();
+            if (!message.contains("Connection reset by peer")
+                && !message.contains("Broken pipe")
+                && !e.getClass().getName().contains(".ClientAbortException")) {
+                LOG.warn("{} doBody causes Exception!\n", path,e);
+                LOG.trace(e.toString());
+            }
         }
     }
 
