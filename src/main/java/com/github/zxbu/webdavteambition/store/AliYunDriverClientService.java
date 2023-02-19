@@ -33,7 +33,6 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,9 +49,9 @@ public class AliYunDriverClientService {
                     if (workDirLinux.exists()) {
                         workDir = workDirLinux.getAbsolutePath() + File.separator;
                     } else {
-                        workDir = AliYunDriverClientService.class.getClassLoader().getResource(".").getPath() + File.separator;
+                        workDir = new File(System.getProperty("catalina.base"), "data").getAbsolutePath() + File.separator;
                     }
-
+                    LOGGER.info("workDir: {}", workDir);
                     AliYunDriveProperties properties = AliYunDriveProperties.load(workDir);
                     properties.authorization = null;
                     properties.refreshTokenNext = System.getProperty("REFRESH_TOKEN");
