@@ -19,7 +19,6 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
--applymapping ../app/build/outputs/mapping/release/mapping.txt
 -keepclassmembers class com.github.zxbu.webdavteambition.**,
     net.sf.webdav.WebdavServlet,
     com.github.zxbu.webdavteambition.store.AliYunDriverFileSystemStore,
