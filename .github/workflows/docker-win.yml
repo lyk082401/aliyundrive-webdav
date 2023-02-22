@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Build Linux
+name: Build Windows
 
 # Controls when the action will run. 
 on:
@@ -33,9 +33,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - { os: macos-12, arch: x86_64, suffix: darwin }
-#          - { os: self-hosted, arch: arm64, suffix: linux }
-#          - { os: ubuntu-22.04, arch: amd64, suffix: linux }
+          - { os: windows-2022, arch: amd64, suffix: windows }
     steps:
       -
         name: Checkout
@@ -45,10 +43,6 @@ jobs:
         id: date
         run: echo "::set-output name=today::$(date +'%Y%m%d')"
       -
-        name: Installing Graalvm dependencies
-        run: sudo apt install -y make gcc libz-dev
-        if:  matrix.target.suffix  == 'linux'
-      -
         name: Setup Graalvm
         uses: graalvm/setup-graalvm@v1
         with:
@@ -57,22 +51,21 @@ jobs:
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: 'gradle'
-      - run: chmod +x ./gradlew
       # Set VERSION_INFORMATION
-      - run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew --no-daemon -q ciPrintVersionInformation)" >> $GITHUB_ENV
+      - run: echo "VERSION_INFORMATION=$(./gradlew --no-daemon -q ciPrintVersionInformation)" >> $env:GITHUB_ENV
       -
         name: Build project
         run: ./gradlew --no-daemon nativeCompile
       -
-        run: mv build/native/nativeCompile/webdav-aliyundriver-android build/native/nativeCompile/webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}
+        run: mv build/native/nativeCompile/webdav-aliyundriver-android.exe build/native/nativeCompile/webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe
       -
         name: Archive artifacts
         uses: thedoctor0/zip-release@0.7.1
         with:
-          type: 'tar'
-          filename: 'webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.tar.gz'
+          type: 'zip'
+          filename: 'webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe.zip'
           directory: 'build/native/nativeCompile/'
-          path: "./webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}"
+          path: "./webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe"
       -
         name: Upload artifacts
         uses: bxb100/action-upload-webdav@v1
@@ -82,4 +75,4 @@ jobs:
           webdav_password: ${{secrets.WEBDAV_PASSWORD}}
           webdav_upload_path: "/${{ env.VERSION_INFORMATION }}"
           files: |
-            build/native/nativeCompile/webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.tar.gz
+            build/native/nativeCompile/webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe.zip
