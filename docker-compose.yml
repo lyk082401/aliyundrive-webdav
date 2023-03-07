@@ -1,10 +1,8 @@
 version: '3'
 services:
-  webdav-aliyundriver:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: webdav-aliyundriver
+  aliyundrive-webdav:
+    image: eritpchy/aliyundrive-webdav
+    container_name: aliyundrive-webdav
     restart: always
     volumes:
       - /etc/localtime:/etc/localtime

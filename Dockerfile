@@ -1,6 +1,7 @@
 FROM ubuntu:22.04 as builder
-RUN apt update
-RUN DEBIAN_FRONTEND=noninteractive apt install -y curl build-essential libz-dev zlib1g-dev
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt update \
+    && DEBIAN_FRONTEND=noninteractive apt install -y curl build-essential libz-dev zlib1g-dev
 RUN curl -sL https://get.graalvm.org/jdk | bash -s --
 ENV LANG=C.UTF-8
 RUN cd /graalvm-ce-java* \
@@ -12,9 +13,12 @@ COPY ./build.gradle /tmp/webdav-aliyundriver/build.gradle
 COPY ./gradle /tmp/webdav-aliyundriver/gradle
 COPY ./gradlew /tmp/webdav-aliyundriver/gradlew
 COPY ./settings.gradle /tmp/webdav-aliyundriver/settings.gradle
-RUN . /tmp/env && cd /tmp/webdav-aliyundriver && ./gradlew --info dependencies
+COPY ./gradle.properties /tmp/webdav-aliyundriver/gradle.properties
+RUN --mount=type=cache,target=/root/.gradle \
+    . /tmp/env && cd /tmp/webdav-aliyundriver && ./gradlew --info dependencies
 COPY ./ /tmp/webdav-aliyundriver
-RUN . /tmp/env \
+RUN --mount=type=cache,target=/root/.gradle \
+    . /tmp/env \
     && cd /tmp/webdav-aliyundriver \
     && ./gradlew nativeCompile --no-daemon
 RUN chmod +x /tmp/webdav-aliyundriver/build/native/nativeCompile/webdav-aliyundriver

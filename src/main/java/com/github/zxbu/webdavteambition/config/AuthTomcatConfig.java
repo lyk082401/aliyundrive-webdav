@@ -24,7 +24,7 @@ import java.util.Collections;
 public class AuthTomcatConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>, Ordered {
 
     @Autowired
-    private AliYunDriveProperties aliYunDriveProperties;
+    private AliyunDriveProperties mAliyunDriveProperties;
 
     @Override
     public void customize(ConfigurableServletWebServerFactory factory) {
@@ -36,15 +36,15 @@ public class AuthTomcatConfig implements WebServerFactoryCustomizer<Configurable
             RealmBase realm = new RealmBase() {
                 @Override
                 protected String getPassword(String username) {
-                    if (aliYunDriveProperties.auth.userName.equals(username)) {
-                        return aliYunDriveProperties.auth.password;
+                    if (mAliyunDriveProperties.getAuth().getUserName().equals(username)) {
+                        return mAliyunDriveProperties.getAuth().getPassword();
                     }
                     return null;
                 }
 
                 @Override
                 protected Principal getPrincipal(String username) {
-                    return new GenericPrincipal(username, aliYunDriveProperties.auth.password, Collections.singletonList("**"));
+                    return new GenericPrincipal(username, mAliyunDriveProperties.getAuth().getPassword(), Collections.singletonList("**"));
                 }
             };
 
@@ -67,6 +67,6 @@ public class AuthTomcatConfig implements WebServerFactoryCustomizer<Configurable
 
     @Override
     public int getOrder() {
-        return Ordered.LOWEST_PRECEDENCE;
+        return LOWEST_PRECEDENCE;
     }
 }

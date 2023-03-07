@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+}
+
+apply plugin: 'maven-publish'
+group 'net.xdow'
+version '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+}
+
+compileTestJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'org.jetbrains:annotations:15.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    compileOnly 'org.projectlombok:lombok:1.18.26'
+    annotationProcessor 'org.projectlombok:lombok:1.18.26'
+    implementation 'org.web3j:crypto:5.0.0'
+//    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
+//    compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation project(':aliyundrive-sdk-openapi')
+    implementation project(':aliyundrive-sdk-webapi')
+    implementation project(':webdav')
+    implementation 'commons-io:commons-io:2.6'// 2.11.0=java8 2.6=java7
+    implementation 'org.apache.commons:commons-lang3:3.8'
+    implementation 'com.google.guava:guava:20.0' //java7
+    compileOnly 'com.squareup.okhttp3:okhttp:3.12.13' //api19
+    compileOnly 'com.squareup.okhttp3:logging-interceptor:3.12.13' //api19
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task sourceJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allJava
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact tasks.sourceJar
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}

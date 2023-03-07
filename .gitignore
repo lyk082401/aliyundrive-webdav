@@ -37,3 +37,6 @@ out/
 .vscode/
 *.log
 *.log.*
+
+local.properties
+/conf/meta.json

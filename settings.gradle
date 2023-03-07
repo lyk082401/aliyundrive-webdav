@@ -1,0 +1,10 @@
+include 'aliyundrive-sdk-openapi'
+include 'aliyundrive-sdk-webapi'
+include 'webdav'
+include 'aliyundrive-webdav-internal'
+include(':jap-http')
+include(':jap-http-adapter:jap-http-jakarta-adapter')
+include(':jap-http-adapter:jap-http-javax-adapter')
+include 'webdav-jakarta'
+include 'webdav-javax'
+include 'android-core'

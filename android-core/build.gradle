@@ -1,0 +1,107 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.0.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21"
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+plugins {
+    id 'maven-publish'
+}
+apply plugin: 'com.android.library'
+
+repositories {
+    google()
+    mavenCentral()
+}
+android {
+    compileSdk 30
+
+    defaultConfig {
+        minSdk 19
+        targetSdk 30
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled false //设置为true会导致低端设备崩溃 模拟器API30-19
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    packagingOptions {
+        exclude "META-INF/**"
+    }
+    sourceSets["main"].assets.srcDir(
+            layout.buildDirectory.dir("generated/dependencyAssets/"))
+}
+
+dependencies {
+    compileOnly 'com.squareup.okhttp3:okhttp:3.12.13' //Api19
+    compileOnly 'com.squareup.okhttp3:logging-interceptor:3.12.13' //api19
+    implementation 'com.google.guava:guava:20.0' //java7
+    implementation 'org.apache.commons:commons-lang3:3.8'  //java7
+    implementation 'commons-io:commons-io:2.6' //java7
+    compileOnly 'org.slf4j:slf4j-api:1.7.30'
+    compileOnly 'org.eclipse.jetty:jetty-webapp:8.0.0.v20110901'
+    compileOnly 'org.mortbay.jetty:servlet-api:3.0.20100224'
+    implementation("org.web3j:crypto:4.8.8-android") {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
+    compileOnly("org.projectlombok:lombok:1.18.26")
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
+
+    api project(':aliyundrive-sdk-openapi')
+    implementation project(':aliyundrive-sdk-webapi')
+    implementation project(':aliyundrive-webdav-internal')
+    implementation project(':webdav')
+    implementation project(':webdav-javax')
+    implementation project(':jap-http-adapter:jap-http-javax-adapter')
+    compileOnly('jakarta.servlet:jakarta.servlet-api:5.0.0')
+    compileOnly("org.greenrobot:eventbus:3.3.1")
+}
+
+android.libraryVariants.all { variant ->
+    def buildType = "${variant.buildType.name.capitalize()}"
+    Task buildWarTask = tasks.create(name: "buildWar${buildType}", type: Zip, dependsOn: "minify${buildType}WithR8") {
+        archiveFileName = "ROOT.war"
+        destinationDirectory = layout.buildDirectory.dir("generated/dependencyAssets/")
+        from fileTree(dir: file("src/main/webapp/"), include: '**/*')
+    }
+    tasks["generate${variant.name.capitalize()}Assets"].dependsOn(buildWarTask)
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId = 'net.xdow' //publish
+                artifactId = 'aliyundrive-android-core'
+                version = '1.0.0'
+                from components.release
+            }
+        }
+        repositories {
+            mavenLocal()
+        }
+    }
+}

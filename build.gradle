@@ -1,72 +1,76 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.0.2'
-	id 'io.spring.dependency-management' version '1.1.0'
-	id 'org.graalvm.buildtools.native' version '0.9.20'
+    id 'java'
+    id 'org.springframework.boot' version '3.0.2'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'org.graalvm.buildtools.native' version '0.9.20'
 }
 
 group = 'com.github'
-version = '2.4.0'
+version = '3.0.4'
 sourceCompatibility = '17'
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
-	maven { url 'https://repo.spring.io/release/'}
-	maven { url 'https://repo.spring.io/snapshot' }
+    mavenCentral()
+    maven { url 'https://repo.spring.io/release/' }
+    maven { url 'https://repo.spring.io/snapshot' }
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok:1.18.26'
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'com.google.code.gson:gson:2.8.9'
-	implementation 'com.google.guava:guava:31.1-jre'
-	implementation 'com.google.code.findbugs:jsr305:3.0.2'
-	implementation 'org.apache.commons:commons-lang3:3.8'
-	implementation 'commons-io:commons-io:2.11.0'// 2.11.0=java8 2.6=java7
-	implementation 'org.web3j:crypto:5.0.0'
-	compileOnly 'org.projectlombok:lombok:1.18.26'
-	implementation 'com.squareup.okhttp3:okhttp:3.14.9'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok:1.18.26'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    compileOnly 'org.projectlombok:lombok:1.18.26'
+    implementation 'org.apache.commons:commons-lang3:3.8'
+    compileOnly 'org.mortbay.jetty:servlet-api:3.0.20100224'
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.13' //api19
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.13' //api19
+    implementation project(':aliyundrive-webdav-internal')
+    implementation project(':aliyundrive-sdk-openapi')
+    implementation project(':aliyundrive-sdk-webapi')
+    implementation project(':webdav-jakarta')
+    implementation project(':jap-http-adapter:jap-http-jakarta-adapter')
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 compileJava.options.encoding = 'UTF-8'
 tasks.withType(JavaCompile) {
-	options.encoding = 'UTF-8'
+    options.encoding = 'UTF-8'
 }
 
 task ciPrintVersionInformation {
-	println version
+    println version
 }
 
 // https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html
 graalvmNative {
-	binaries {
-		main {
-			buildArgs.add('-H:+AddAllCharsets')
-			buildArgs.add('--allow-incomplete-classpath')
-			buildArgs.add('--enable-url-protocols=http,https')
-		}
-	}
+    binaries {
+        main {
+            buildArgs.add('-H:+AddAllCharsets')
+            buildArgs.add('--allow-incomplete-classpath')
+            buildArgs.add('--enable-url-protocols=http,https')
+        }
+    }
 }
 
 bootBuildImage {
-	builder = 'paketobuildpacks/builder:tiny'
-	environment = [
-			'BP_JVM_VERSION': "17",
-			'BP_NATIVE_IMAGE': 'true',
-			'BP_NATIVE_IMAGE_BUILD_ARGUMENTS' : '-H:+AddAllCharsets --enable-url-protocols=http,https',
-	]
-	tags = ["eritpchy/webdav-aliyundriver:latest", "eritpchy/webdav-aliyundriver:${version}-${new Date().format('yyyyMMdd')}"]
+    builder = 'paketobuildpacks/builder:tiny'
+    environment = [
+            'BP_JVM_VERSION'                 : "17",
+            'BP_NATIVE_IMAGE'                : 'true',
+            'BP_NATIVE_IMAGE_BUILD_ARGUMENTS': '-H:+AddAllCharsets --enable-url-protocols=http,https',
+    ]
+    tags = ["eritpchy/webdav-aliyundriver:latest", "eritpchy/webdav-aliyundriver:${version}-${new Date().format('yyyyMMdd')}"]
 }

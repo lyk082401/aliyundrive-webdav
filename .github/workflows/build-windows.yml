@@ -57,15 +57,15 @@ jobs:
         name: Build project
         run: ./gradlew --no-daemon nativeCompile
       -
-        run: mv build/native/nativeCompile/webdav-aliyundriver-android.exe build/native/nativeCompile/webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe
+        run: mv build/native/nativeCompile/aliyundrive-webdav.exe build/native/nativeCompile/aliyundrive-webdav-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe
       -
         name: Archive artifacts
         uses: thedoctor0/zip-release@0.7.1
         with:
           type: 'zip'
-          filename: 'webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe.zip'
+          filename: 'aliyundrive-webdav-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe.zip'
           directory: 'build/native/nativeCompile/'
-          path: "./webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe"
+          path: "./aliyundrive-webdav-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe"
       -
         name: Upload artifacts
         uses: bxb100/action-upload-webdav@v1
@@ -75,4 +75,4 @@ jobs:
           webdav_password: ${{secrets.WEBDAV_PASSWORD}}
           webdav_upload_path: "/${{ env.VERSION_INFORMATION }}"
           files: |
-            build/native/nativeCompile/webdav-aliyundriver-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe.zip
+            build/native/nativeCompile/aliyundrive-webdav-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe.zip

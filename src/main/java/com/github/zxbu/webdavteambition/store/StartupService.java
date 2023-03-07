@@ -1,6 +1,10 @@
 package com.github.zxbu.webdavteambition.store;
 
-import com.github.zxbu.webdavteambition.manager.AliYunSessionManager;
+import com.github.zxbu.webdavteambition.config.AliyunDriveProperties;
+import com.github.zxbu.webdavteambition.manager.AliyunDriveSessionManager;
+import com.github.zxbu.webdavteambition.util.AliyunDriveClientServiceHolder;
+import net.xdow.aliyundrive.IAliyunDrive;
+import net.xdow.aliyundrive.webapi.impl.AliyunDriveWebApiImplV1;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.ContextClosedEvent;
@@ -10,36 +14,43 @@ import org.springframework.stereotype.Component;
 @Component
 public class StartupService {
 
-    private AliYunSessionManager mAliYunSessionManager;
+    private AliyunDriveSessionManager mAliyunDriveSessionManager;
 
     @Autowired
-    private AliYunDriverClientService mAliYunDriverClientService;
+    private AliyunDriveClientServiceHolder mAliyunDriveClientServiceHolder;
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReadyEvent() {
-        startAliYunSessionManager();
+        startAliyunDriveSessionManager();
     }
 
     @EventListener(ContextClosedEvent.class)
     public void onContextClosedEvent(ContextClosedEvent contextClosedEvent) {
-        stopAliYunSessionManager();
+        stopAliyunDriveSessionManager();
     }
 
-    private void startAliYunSessionManager(){
-        AliYunSessionManager mgr = mAliYunSessionManager;
+    private void startAliyunDriveSessionManager(){
+        AliyunDriveClientService service = this.mAliyunDriveClientServiceHolder.getAliyunDriveClientService();
+        AliyunDriveProperties properties = service.getProperties();
+        IAliyunDrive aliyunDrive = service.getAliyunDrive();
+        if (aliyunDrive instanceof AliyunDriveWebApiImplV1) {
+        } else {
+            return;
+        }
+        AliyunDriveSessionManager mgr = this.mAliyunDriveSessionManager;
         if (mgr != null) {
             mgr.stop();
         }
-        mgr = new AliYunSessionManager(mAliYunDriverClientService.client);
-        mAliYunSessionManager = mgr;
+        mgr = new AliyunDriveSessionManager((AliyunDriveWebApiImplV1) aliyunDrive, properties);
+        mAliyunDriveSessionManager = mgr;
         mgr.start();
     }
 
-    private void stopAliYunSessionManager(){
-        AliYunSessionManager mgr = mAliYunSessionManager;
+    private void stopAliyunDriveSessionManager(){
+        AliyunDriveSessionManager mgr = mAliyunDriveSessionManager;
         if (mgr != null) {
             mgr.stop();
-            mAliYunSessionManager = null;
+            mAliyunDriveSessionManager = null;
         }
     }
 }

@@ -59,7 +59,7 @@ spec:
       serviceAccountName: webdav-aliyun-sa-clusteradmin
       containers:
         - name: webdav-aliyun
-          image: eritpchy/webdav-aliyundriver
+          image: eritpchy/aliyundrive-webdav
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
