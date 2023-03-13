@@ -1,10 +1,10 @@
 plugins {
     id 'java-library'
-    id 'maven-publish'
 }
 
 group 'net.xdow'
-version '1.0.0'
+version '1.0.2'
+description 'jap-http servlet interface jakarta adapter'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
@@ -27,19 +27,4 @@ dependencies {
     compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
 }
 
-task sourceJar(type: Jar) {
-    classifier 'sources'
-    from sourceSets.main.allJava
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact tasks.sourceJar
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
+apply from: rootProject.file('gradle/maven-center-publish-java.gradle')

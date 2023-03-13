@@ -40,3 +40,4 @@ out/
 
 local.properties
 /conf/meta.json
+/ext/secring.gpg

@@ -7,4 +7,4 @@ include(':jap-http-adapter:jap-http-jakarta-adapter')
 include(':jap-http-adapter:jap-http-javax-adapter')
 include 'webdav-jakarta'
 include 'webdav-javax'
-include 'android-core'
+include 'aliyundrive-android-core'

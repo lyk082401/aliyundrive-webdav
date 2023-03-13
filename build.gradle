@@ -5,8 +5,8 @@ plugins {
     id 'org.graalvm.buildtools.native' version '0.9.20'
 }
 
-group = 'com.github'
-version = '3.0.5'
+group 'com.github'
+version '3.0.5'
 sourceCompatibility = '17'
 
 configurations {
@@ -28,7 +28,6 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
-    compileOnly 'org.projectlombok:lombok:1.18.26'
     implementation 'org.apache.commons:commons-lang3:3.8'
     compileOnly 'org.mortbay.jetty:servlet-api:3.0.20100224'
     implementation 'com.google.code.gson:gson:2.8.9'
@@ -74,4 +73,17 @@ bootBuildImage {
             'BP_NATIVE_IMAGE_BUILD_ARGUMENTS': '-H:+AddAllCharsets --enable-url-protocols=http,https',
     ]
     tags = ["eritpchy/webdav-aliyundriver:latest", "eritpchy/webdav-aliyundriver:${version}-${new Date().format('yyyyMMdd')}"]
+}
+
+File secretPropsFile = project.rootProject.file('local.properties')
+if (secretPropsFile.exists()) {
+    println "Found secret props file, loading props"
+    Properties p = new Properties()
+    p.load(new FileInputStream(secretPropsFile))
+    p.each { name, value ->
+        if (value.startsWith('./')) {
+            value = file(value).getAbsolutePath()
+        }
+        ext[name] = value
+    }
 }

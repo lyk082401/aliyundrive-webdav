@@ -1,0 +1,88 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+
+signing {
+    sign publishing.publications
+}
+
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+def setDefaultProp(def key, def value) {
+    if (!hasProperty(key)) {
+        ext[key] = value
+    }
+}
+
+setDefaultProp("signing.keyId", "")
+setDefaultProp("signing.password", "")
+setDefaultProp("signing.secretKeyRingFile", "")
+setDefaultProp("ossrhUsername", "")
+setDefaultProp("ossrhPassword", "")
+setDefaultProp("developerId", "")
+setDefaultProp("developerName", "")
+setDefaultProp("developerEmail", "")
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact tasks.sourcesJar
+            artifact tasks.javadocJar
+            pom {
+                name = project.name
+                packaging = 'jar'
+                description = project.description
+                url = 'https://github.com/eritpchy/aliyundrive-webdav'
+
+                scm {
+                    //第 5 处
+                    //修改成你的Git地址：
+                    connection = 'scm:git@github.com:eritpchy/aliyundrive-webdav.git'
+                    developerConnection = 'scm:git@github.com:eritpchy/aliyundrive-webdav.git'
+                    //分支地址：
+                    url = 'https://github.com/eritpchy/aliyundrive-webdav/tree/main'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = developerId
+                        name = developerName
+                        email = developerEmail
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        mavenLocal()
+        maven {
+            //此处用'https://s01.oss.sonatype.org'替代'https://oss.sonatype.org'，因为`https://oss.sonatype.org`会出现nexus后台无法登陆以及发布出现`Received status code 403 from server: Forbidden`问题
+            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            // You only need this if you want to publish snapshots, otherwise just set the URL
+            // to the release repo directly
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            // The username and password we've fetched earlier
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
+        }
+    }
+}

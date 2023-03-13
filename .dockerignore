@@ -5,3 +5,5 @@
 /webdav.log
 /webdav.log*
 /build
+/ext/secring.gpg
+local.properties

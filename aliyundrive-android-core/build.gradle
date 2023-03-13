@@ -12,10 +12,11 @@ buildscript {
     }
 }
 
-plugins {
-    id 'maven-publish'
-}
 apply plugin: 'com.android.library'
+
+group 'net.xdow'
+version '1.0.2'
+description 'AliyunDrive Webdav Android Core'
 
 repositories {
     google()
@@ -28,7 +29,7 @@ android {
         minSdk 19
         targetSdk 30
         versionCode 1
-        versionName "1.0"
+        versionName project.version
         multiDexEnabled false //设置为true会导致低端设备崩溃 模拟器API30-19
     }
 
@@ -94,18 +95,4 @@ android.libraryVariants.all { variant ->
     tasks["generate${variant.name.capitalize()}Assets"].dependsOn(buildWarTask)
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            release(MavenPublication) {
-                groupId = 'net.xdow' //publish
-                artifactId = 'aliyundrive-android-core'
-                version = '1.0.0'
-                from components.release
-            }
-        }
-        repositories {
-            mavenLocal()
-        }
-    }
-}
+apply from: rootProject.file('gradle/maven-center-publish-android.gradle')
