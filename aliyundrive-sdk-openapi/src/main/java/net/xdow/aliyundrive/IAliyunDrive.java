@@ -8,6 +8,9 @@ import okhttp3.Call;
 import java.util.Map;
 
 public interface IAliyunDrive {
+
+    int FLAG_API_ANONYMOUS_CALL = 1 << 0;
+    int FLAG_API_AUTHENTICATION_CALL = 1 << 1;
     AliyunDriveCall<AliyunDriveResponse.AccessTokenInfo> getAccessToken(AliyunDriveRequest.AccessTokenInfo query);
     AliyunDriveCall<AliyunDriveResponse.QrCodeGenerateInfo> qrCodeGenerate(AliyunDriveRequest.QrCodeGenerateInfo query);
 

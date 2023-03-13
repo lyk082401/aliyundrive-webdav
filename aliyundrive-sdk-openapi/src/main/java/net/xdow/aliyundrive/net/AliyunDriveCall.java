@@ -1,7 +1,7 @@
 package net.xdow.aliyundrive.net;
 
 import net.xdow.aliyundrive.bean.AliyunDriveResponse;
-import net.xdow.aliyundrive.exception.NotAuthorizeException;
+import net.xdow.aliyundrive.exception.NotAuthenticatedException;
 import net.xdow.aliyundrive.util.JsonUtils;
 import net.xdow.aliyundrive.util.TypeReference;
 import okhttp3.Call;
@@ -51,7 +51,7 @@ public class AliyunDriveCall<T extends AliyunDriveResponse.GenericMessageInfo> e
                 t = mockResultOnSuccessCallback.onSuccess(t);
             }
             return t;
-        } catch (NotAuthorizeException e) {
+        } catch (NotAuthenticatedException e) {
             throw e;
         } catch (Throwable t) {
             return handleResponseError(t);
@@ -66,7 +66,7 @@ public class AliyunDriveCall<T extends AliyunDriveResponse.GenericMessageInfo> e
             return;
         }
         if ("AccessTokenInvalid".equals(t.getCode())) {
-            throw new NotAuthorizeException(t.getMessage() + "(" + t.getCode() + ")");
+            throw new NotAuthenticatedException(t.getMessage() + "(" + t.getCode() + ")");
         }
     }
 

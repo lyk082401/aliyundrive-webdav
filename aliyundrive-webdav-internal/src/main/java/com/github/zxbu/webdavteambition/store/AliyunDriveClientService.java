@@ -14,6 +14,7 @@ import net.xdow.aliyundrive.AliyunDriveConstant;
 import net.xdow.aliyundrive.IAliyunDrive;
 import net.xdow.aliyundrive.IAliyunDriveAuthorizer;
 import net.xdow.aliyundrive.bean.*;
+import net.xdow.aliyundrive.exception.NotAuthenticatedException;
 import net.xdow.aliyundrive.net.AliyunDriveCall;
 import net.xdow.aliyundrive.util.JsonUtils;
 import net.xdow.aliyundrive.webapi.AliyunDriveWebConstant;
@@ -113,6 +114,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
     }
 
     private List<AliyunDriveFileInfo> fileListFromApi(String nodeId, String marker, List<AliyunDriveFileInfo> all) {
+        try {
         AliyunDriveRequest.FileListInfo query = new AliyunDriveRequest.FileListInfo(
                 getDefaultDriveId(), nodeId
         );
@@ -120,13 +122,20 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         query.setLimit(200);
         query.setOrderBy(AliyunDriveEnum.OrderBy.UpdatedAt);
         query.setOrderDirection(AliyunDriveEnum.OrderDirection.Desc);
-        AliyunDriveResponse.FileListInfo res = mAliyunDrive.fileList(query).execute();
-        all.addAll(res.getItems());
-        String nextMarker = res.getNextMarker();
-        if (StringUtils.isEmpty(nextMarker)) {
-            return all;
+            AliyunDriveResponse.FileListInfo res = this.mAliyunDrive.fileList(query).execute();
+            all.addAll(res.getItems());
+            String nextMarker = res.getNextMarker();
+            if (StringUtils.isEmpty(nextMarker)) {
+                return all;
+            }
+            return fileListFromApi(nodeId, nextMarker, all);
+        } catch (NotAuthenticatedException e) {
+            //WebApi需要这个来引导用户输入token
+            if (this.mAliyunDrive instanceof AliyunDriveWebApiImplV1) {
+                return new ArrayList<>();
+            }
+            throw e;
         }
-        return fileListFromApi(nodeId, nextMarker, all);
     }
 
     @Nullable

@@ -1,4 +1,4 @@
-package net.xdow.aliyundrive.net;
+package net.xdow.aliyundrive.net.interceptor;
 
 import okhttp3.Interceptor;
 import okhttp3.Request;
@@ -23,7 +23,7 @@ public class XHttpLoggingInterceptor implements Interceptor {
         try {
             Request request = chain.request();
             if (SKIP_HEADER_VALUE.equals(request.header(SKIP_HEADER_NAME))) {
-                return chain.proceed(chain.request());
+                return chain.proceed(chain.request().newBuilder().removeHeader(SKIP_HEADER_NAME).build());
             }
             return mLoggingInterceptor.intercept(chain);
         } catch (Exception e) {

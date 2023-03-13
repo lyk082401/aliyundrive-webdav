@@ -15,7 +15,7 @@ import net.xdow.aliyundrive.IAliyunDrive;
 import net.xdow.aliyundrive.bean.AliyunDriveEnum;
 import net.xdow.aliyundrive.bean.AliyunDriveRequest;
 import net.xdow.aliyundrive.bean.AliyunDriveResponse;
-import net.xdow.aliyundrive.exception.NotAuthorizeException;
+import net.xdow.aliyundrive.exception.NotAuthenticatedException;
 import net.xdow.aliyundrive.util.StringUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -90,7 +90,7 @@ public class AliyunDriveLoginFilter implements Filter {
         if (response instanceof IErrorWrapperResponse) {
             IErrorWrapperResponse resp = (IErrorWrapperResponse) response;
             if (resp.getStatus() == WebdavStatus.SC_INTERNAL_SERVER_ERROR) {
-                if (String.valueOf(resp.getMessage()).contains(NotAuthorizeException.class.getName())) {
+                if (String.valueOf(resp.getMessage()).contains(NotAuthenticatedException.class.getName())) {
                     //开始登录
                     String rootUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
                     AliyunDrivePropertiesSpring properties = SpringBeanFactory.getBean(AliyunDrivePropertiesSpring.class);

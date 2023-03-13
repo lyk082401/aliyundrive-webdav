@@ -1,4 +1,6 @@
 FROM ubuntu:22.04 as builder
+# Allow ubuntu to cache package downloads
+RUN rm -f /etc/apt/apt.conf.d/docker-clean
 RUN --mount=type=cache,target=/var/cache/apt \
     apt update \
     && DEBIAN_FRONTEND=noninteractive apt install -y curl build-essential libz-dev zlib1g-dev

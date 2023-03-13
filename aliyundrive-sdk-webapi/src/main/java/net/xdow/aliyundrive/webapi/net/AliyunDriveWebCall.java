@@ -1,7 +1,7 @@
 package net.xdow.aliyundrive.webapi.net;
 
 import net.xdow.aliyundrive.bean.AliyunDriveResponse;
-import net.xdow.aliyundrive.exception.NotAuthorizeException;
+import net.xdow.aliyundrive.exception.NotAuthenticatedException;
 import net.xdow.aliyundrive.net.AliyunDriveCall;
 import okhttp3.Call;
 
@@ -29,7 +29,7 @@ public class AliyunDriveWebCall<T extends AliyunDriveResponse.GenericMessageInfo
             return;
         }
         if ("InvalidParameter.RefreshToken".equals(t.getCode())) { //Web
-            throw new NotAuthorizeException(t.getMessage() + "(" + t.getCode() + ")");
+            throw new NotAuthenticatedException(t.getMessage() + "(" + t.getCode() + ")");
         }
     }
 }

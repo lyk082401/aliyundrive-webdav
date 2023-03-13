@@ -12,7 +12,7 @@ import net.sf.webdav.Transaction;
 import net.sf.webdav.exceptions.WebdavException;
 import net.xdow.aliyundrive.bean.AliyunDriveEnum;
 import net.xdow.aliyundrive.bean.AliyunDriveFileInfo;
-import net.xdow.aliyundrive.exception.NotAuthorizeException;
+import net.xdow.aliyundrive.exception.NotAuthenticatedException;
 import net.xdow.aliyundrive.webapi.impl.AliyunDriveWebApiImplV1;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
@@ -152,7 +152,7 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
             }
             return nameList.toArray(new String[nameList.size()]);
         } catch (UncheckedExecutionException e) {
-            if (e.getCause() instanceof NotAuthorizeException) {
+            if (e.getCause() instanceof NotAuthenticatedException) {
                 return new String[]{"授权已失效" + e.getMessage()};
 
             }

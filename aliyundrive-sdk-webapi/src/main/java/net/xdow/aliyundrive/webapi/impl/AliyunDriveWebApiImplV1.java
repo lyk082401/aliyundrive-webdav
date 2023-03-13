@@ -4,9 +4,10 @@ package net.xdow.aliyundrive.webapi.impl;
 import net.xdow.aliyundrive.IAliyunDrive;
 import net.xdow.aliyundrive.IAliyunDriveAuthorizer;
 import net.xdow.aliyundrive.bean.*;
-import net.xdow.aliyundrive.net.AccessTokenInvalidInterceptor;
 import net.xdow.aliyundrive.net.AliyunDriveCall;
-import net.xdow.aliyundrive.net.XHttpLoggingInterceptor;
+import net.xdow.aliyundrive.net.interceptor.AccessTokenInvalidInterceptor;
+import net.xdow.aliyundrive.net.interceptor.AliyunDriveAuthenticateInterceptor;
+import net.xdow.aliyundrive.net.interceptor.XHttpLoggingInterceptor;
 import net.xdow.aliyundrive.util.JsonUtils;
 import net.xdow.aliyundrive.util.StringUtils;
 import net.xdow.aliyundrive.webapi.AliyunDriveWebConstant;
@@ -22,7 +23,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
+public class AliyunDriveWebApiImplV1 implements IAliyunDrive, AliyunDriveAuthenticateInterceptor.IAccessTokenInfoGetter {
     private static final Logger LOGGER = LoggerFactory.getLogger(AliyunDriveWebApiImplV1.class);
 
     private OkHttpClient mOkHttpClient;
@@ -38,8 +39,10 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
 
     private void initOkHttp() {
         XHttpLoggingInterceptor loggingInterceptor = new XHttpLoggingInterceptor();
+        AliyunDriveAuthenticateInterceptor authenticateInterceptor = new AliyunDriveAuthenticateInterceptor(this);
         this.mOkHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor) //response ↑
+                .addInterceptor(authenticateInterceptor) //response ↑
                 .addInterceptor(this.mAccessTokenInvalidInterceptor) //response ↑
                 .addInterceptor(new Interceptor() {
                     @Override
@@ -108,6 +111,7 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
         String bodyAsJson = JsonUtils.toJson(body);
         Request.Builder requestBuilder = new Request.Builder()
                 .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), bodyAsJson))
+                .addHeader(AliyunDriveAuthenticateInterceptor.HEADER_AUTHENTICATE_NAME, AliyunDriveAuthenticateInterceptor.HEADER_AUTHENTICATE_VALUE)
                 .url(url);
         Request request = requestBuilder.build();
         String res = "";
@@ -218,7 +222,8 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
             throw new UnsupportedOperationException("getAccessToken grant_type must be refresh_token, got: " + query.getGrantType().name());
         }
         Map<String, String> params = Collections.singletonMap("refresh_token", query.getRefreshToken());
-        return postApiRequest(AliyunDriveWebConstant.API_ACCESS_TOKEN, params, AliyunDriveResponse.AccessTokenInfo.class)
+        return postApiRequest(AliyunDriveWebConstant.API_ACCESS_TOKEN, params,
+                AliyunDriveResponse.AccessTokenInfo.class, FLAG_API_AUTHENTICATION_CALL)
                 .mockResultOnSuccess(new AliyunDriveWebCall.MockResultCallback<AliyunDriveResponse.AccessTokenInfo>() {
                     @Override
                     public AliyunDriveResponse.AccessTokenInfo onSuccess(AliyunDriveResponse.AccessTokenInfo res) {
@@ -240,22 +245,26 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.FileListInfo> fileList(AliyunDriveRequest.FileListInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_LIST, query, AliyunDriveResponse.FileListInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_LIST, query,
+                AliyunDriveResponse.FileListInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.UserSpaceInfo> getUserSpaceInfo() {
-        return postApiRequest(AliyunDriveWebConstant.API_USER_GET_SPACE_INFO, AliyunDriveWebResponse.UserSpaceInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_USER_GET_SPACE_INFO,
+                AliyunDriveWebResponse.UserSpaceInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.UserDriveInfo> getUserDriveInfo() {
-        return postApiRequest(AliyunDriveWebConstant.API_USER_GET_DRIVE_INFO, AliyunDriveResponse.UserDriveInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_USER_GET_DRIVE_INFO,
+                AliyunDriveResponse.UserDriveInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.FileGetInfo> fileGet(AliyunDriveRequest.FileGetInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_GET, query, AliyunDriveResponse.FileGetInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_GET, query,
+                AliyunDriveResponse.FileGetInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
@@ -280,7 +289,8 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
         if (expireSec < 900 || expireSec > 115200) {
             throw new IllegalArgumentException("Error: expire_sec argument must between 900-115200s, got: " + expireSec);
         }
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_GET_DOWNLOAD_URL, query, AliyunDriveResponse.FileGetDownloadUrlInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_GET_DOWNLOAD_URL, query,
+                AliyunDriveResponse.FileGetDownloadUrlInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
@@ -293,12 +303,14 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
                         + AliyunDriveWebConstant.MAX_FILE_CREATE_PART_INFO_LIST_SIZE + ", got: " + partInfoListSize);
             }
         }
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_CREATE, query, AliyunDriveResponse.FileCreateInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_CREATE, query,
+                AliyunDriveResponse.FileCreateInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.FileGetUploadUrlInfo> fileGetUploadUrl(AliyunDriveRequest.FileGetUploadUrlInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_GET_UPLOAD_URL, query, AliyunDriveResponse.FileGetUploadUrlInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_GET_UPLOAD_URL, query,
+                AliyunDriveResponse.FileGetUploadUrlInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
@@ -308,7 +320,8 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.FileUploadCompleteInfo> fileUploadComplete(AliyunDriveRequest.FileUploadCompleteInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_UPLOAD_COMPLETE, query, AliyunDriveResponse.FileUploadCompleteInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_UPLOAD_COMPLETE, query,
+                AliyunDriveResponse.FileUploadCompleteInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
@@ -325,22 +338,26 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
             );
             this.fileDelete(deleteQuery).execute();
         }
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_RENAME, query, AliyunDriveResponse.FileRenameInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_RENAME, query,
+                AliyunDriveResponse.FileRenameInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.FileMoveInfo> fileMove(AliyunDriveRequest.FileMoveInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_MOVE, query, AliyunDriveResponse.FileMoveInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_MOVE, query,
+                AliyunDriveResponse.FileMoveInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.FileCopyInfo> fileCopy(AliyunDriveRequest.FileCopyInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_COPY, query, AliyunDriveResponse.FileCopyInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_COPY, query,
+                AliyunDriveResponse.FileCopyInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.FileMoveToTrashInfo> fileMoveToTrash(final AliyunDriveRequest.FileMoveToTrashInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_MOVE_TO_TRASH, query, AliyunDriveResponse.FileMoveToTrashInfo.class)
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_MOVE_TO_TRASH, query,
+                AliyunDriveResponse.FileMoveToTrashInfo.class, FLAG_API_AUTHENTICATION_CALL)
                 .mockResultOnSuccess(new AliyunDriveWebCall.MockResultCallback<AliyunDriveResponse.FileMoveToTrashInfo>() {
                     @Override
                     public AliyunDriveResponse.FileMoveToTrashInfo onSuccess(AliyunDriveResponse.FileMoveToTrashInfo res) {
@@ -357,7 +374,8 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
 
     @Override
     public AliyunDriveCall<AliyunDriveResponse.FileDeleteInfo> fileDelete(final AliyunDriveRequest.FileDeleteInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_FILE_DELETE, query, AliyunDriveResponse.FileDeleteInfo.class)
+        return postApiRequest(AliyunDriveWebConstant.API_FILE_DELETE, query,
+                AliyunDriveResponse.FileDeleteInfo.class, FLAG_API_AUTHENTICATION_CALL)
                 .mockResultOnSuccess(new AliyunDriveWebCall.MockResultCallback<AliyunDriveResponse.FileDeleteInfo>() {
                     @Override
                     public AliyunDriveResponse.FileDeleteInfo onSuccess(AliyunDriveResponse.FileDeleteInfo res) {
@@ -375,6 +393,7 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
     @Override
     public Call upload(String url, byte[] bytes, final int offset, final int byteCount) {
         Request request = new Request.Builder()
+                .addHeader(AliyunDriveAuthenticateInterceptor.HEADER_AUTHENTICATE_NAME, AliyunDriveAuthenticateInterceptor.HEADER_AUTHENTICATE_VALUE)
                 .addHeader(XHttpLoggingInterceptor.SKIP_HEADER_NAME, XHttpLoggingInterceptor.SKIP_HEADER_VALUE)
                 .put(RequestBody.create(MediaType.parse(""), bytes, offset, byteCount))
                 .url(url).build();
@@ -384,6 +403,7 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
     @Override
     public Call download(String url, String range, String ifRange) {
         Request.Builder builder = new Request.Builder();
+        builder.addHeader(XHttpLoggingInterceptor.SKIP_HEADER_NAME, XHttpLoggingInterceptor.SKIP_HEADER_VALUE);
         builder.addHeader(XHttpLoggingInterceptor.SKIP_HEADER_NAME, XHttpLoggingInterceptor.SKIP_HEADER_VALUE);
         if (range != null) {
             builder.header("range", range);
@@ -416,32 +436,32 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
     }
 
     public AliyunDriveCall<AliyunDriveWebResponse.ShareTokenInfo> shareToken(AliyunDriveWebRequest.ShareTokenInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_SHARE_TOKEN, query, AliyunDriveWebResponse.ShareTokenInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_SHARE_TOKEN, query,
+                AliyunDriveWebResponse.ShareTokenInfo.class, FLAG_API_ANONYMOUS_CALL);
     }
 
     public AliyunDriveCall<AliyunDriveResponse.FileListInfo> shareList(AliyunDriveWebRequest.ShareListInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_SHARE_LIST, query, AliyunDriveResponse.FileListInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_SHARE_LIST, query,
+                AliyunDriveResponse.FileListInfo.class, FLAG_API_ANONYMOUS_CALL);
     }
 
     public AliyunDriveCall<AliyunDriveWebResponse.ShareSaveInfo> shareSave(AliyunDriveWebRequest.ShareSaveInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_SHARE_SAVE, query, AliyunDriveWebResponse.ShareSaveInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_SHARE_SAVE, query,
+                AliyunDriveWebResponse.ShareSaveInfo.class, FLAG_API_AUTHENTICATION_CALL);
     }
 
     public AliyunDriveCall<AliyunDriveFileInfo> shareGetFile(AliyunDriveWebRequest.ShareGetFileInfo query) {
-        return postApiRequest(AliyunDriveWebConstant.API_SHARE_GET_FILE, query, AliyunDriveFileInfo.class);
+        return postApiRequest(AliyunDriveWebConstant.API_SHARE_GET_FILE, query,
+                AliyunDriveFileInfo.class, FLAG_API_ANONYMOUS_CALL);
     }
 
     private <T extends AliyunDriveResponse.GenericMessageInfo> AliyunDriveWebCall<T> postApiRequest(
-            String url, Class<? extends AliyunDriveResponse.GenericMessageInfo> classOfT) {
-        Request request = new Request.Builder()
-                .url(url)
-                .post(RequestBody.create(JSON, "{}"))
-                .build();
-        return new AliyunDriveWebCall<>(mOkHttpClient.newCall(request), classOfT);
+            String url, Class<? extends AliyunDriveResponse.GenericMessageInfo> classOfT, int flags) {
+        return (AliyunDriveWebCall<T>) postApiRequest(url, null, classOfT, flags);
     }
 
     private <T extends AliyunDriveResponse.GenericMessageInfo> AliyunDriveWebCall<T> postApiRequest(
-            String url, Object object, Class<T> classOfT) {
+            String url, Object object, Class<T> classOfT, int flags) {
         Request.Builder builder = new Request.Builder();
         if (object instanceof AliyunDriveWebShareRequestInfo) {
             String shareToken = ((AliyunDriveWebShareRequestInfo) object).getShareToken();
@@ -450,10 +470,21 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive {
             }
             builder.addHeader("X-Share-Token", shareToken);
         }
-        Request request = builder
-                .url(url)
-                .post(RequestBody.create(JSON, JsonUtils.toJson(object)))
-                .build();
-        return new AliyunDriveWebCall<>(mOkHttpClient.newCall(request), classOfT);
+        builder.url(url);
+        if (object == null) {
+            builder.post(RequestBody.create(JSON, "{}"));
+        } else {
+            builder.post(RequestBody.create(JSON, JsonUtils.toJson(object)));
+        }
+        if ((FLAG_API_AUTHENTICATION_CALL & flags) != 0) {
+            builder.addHeader(AliyunDriveAuthenticateInterceptor.HEADER_AUTHENTICATE_NAME,
+                    AliyunDriveAuthenticateInterceptor.HEADER_AUTHENTICATE_VALUE);
+        }
+        return new AliyunDriveWebCall<>(mOkHttpClient.newCall(builder.build()), classOfT);
+    }
+
+    @Override
+    public AliyunDriveResponse.AccessTokenInfo getAccessTokenInfo() {
+        return this.mAccessTokenInfo;
     }
 }
