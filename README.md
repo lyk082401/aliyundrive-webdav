@@ -173,7 +173,7 @@ AliyunDrive.newAliyunDrive()
 
 > 四群群号（已满）：752067171
 
-> 五群群号：555954095
+> 五群群号：703607910
 
 # 新手教程
 ![imaage](./doc/img/openapi_login.gif)
