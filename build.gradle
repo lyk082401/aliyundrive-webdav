@@ -61,6 +61,7 @@ graalvmNative {
             buildArgs.add('-H:+AddAllCharsets')
             buildArgs.add('--allow-incomplete-classpath')
             buildArgs.add('--enable-url-protocols=http,https')
+            buildArgs.add('--initialize-at-run-time=sun.net.dns.ResolverConfigurationImpl')
         }
     }
 }
