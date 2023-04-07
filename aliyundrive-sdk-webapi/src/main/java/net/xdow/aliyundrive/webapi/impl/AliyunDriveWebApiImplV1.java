@@ -18,8 +18,11 @@ import net.xdow.aliyundrive.webapi.net.AliyunDriveWebCall;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xbill.DNS.Address;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -103,6 +106,15 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive, AliyunDriveAuthent
                 .readTimeout(1, TimeUnit.MINUTES)
                 .writeTimeout(1, TimeUnit.MINUTES)
                 .connectTimeout(1, TimeUnit.MINUTES)
+                .dns(new Dns() {
+                    @Override
+                    public List<InetAddress> lookup(String hostname) throws UnknownHostException {
+                        return Arrays.asList(Address.getAllByName(hostname));
+                    }
+                })
+                .followRedirects(true)
+                .followSslRedirects(true)
+                .retryOnConnectionFailure(true)
                 .build();
     }
 

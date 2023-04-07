@@ -6,7 +6,7 @@ services:
     restart: always
     volumes:
       - /etc/localtime:/etc/localtime
-      - ./docker/conf:/conf
+      - ./conf:/conf
     ports:
       - "8080:8080"
     tty: true

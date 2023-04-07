@@ -23,7 +23,11 @@ public class AliyunDrivePropertiesSpring extends AliyunDriveProperties implement
         if (StringUtils.isEmpty(this.getDeviceId())) {
             this.setDeviceId(UUID.randomUUID().toString().replace("-", "").substring(0, 24));
         }
-        this.setRefreshTokenNext(refreshToken);
+        if (StringUtils.isEmpty(this.getRefreshToken())) {
+            this.setRefreshToken(refreshToken);
+        } else {
+            this.setRefreshTokenNext(refreshToken);
+        }
         if (StringUtils.isEmpty(this.getAuth().getUserName())) {
             this.getAuth().setUserName("admin");
         }
