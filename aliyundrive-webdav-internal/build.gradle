@@ -40,7 +40,7 @@ dependencies {
     implementation 'com.google.guava:guava:20.0' //java7
     compileOnly 'com.squareup.okhttp3:okhttp:3.12.13' //api19
     compileOnly 'com.squareup.okhttp3:logging-interceptor:3.12.13' //api19
-    implementation 'dnsjava:dnsjava:3.5.2'
+    implementation 'dnsjava:dnsjava:2.1.9' //java7
 }
 
 test {

@@ -34,7 +34,7 @@ dependencies {
     compileOnly 'com.squareup.okhttp3:logging-interceptor:3.12.13' //api19
     implementation 'org.slf4j:slf4j-api:2.0.6'
     implementation project(':aliyundrive-sdk-openapi')
-    implementation 'dnsjava:dnsjava:3.5.2'
+    implementation 'dnsjava:dnsjava:2.1.9' //java7
 }
 
 test {

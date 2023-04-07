@@ -27,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xbill.DNS.config.PropertyResolverConfigProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +59,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
     private final T mAliyunDrive;
 
     public AliyunDriveClientService(Class<? extends IAliyunDrive> aliyunDriveCls, AliyunDriveProperties aliyunDriveProperties) {
-        System.setProperty(PropertyResolverConfigProvider.DNS_SERVER_PROP, "223.5.5.5,114.114.114.114");
+        System.setProperty("dns.server", "223.5.5.5,114.114.114.114");
         this.mAliyunDriveProperties = aliyunDriveProperties;
         this.mAliyunDrive = (T) AliyunDrive.newAliyunDrive(aliyunDriveCls);
         this.mAliyunDrive.setAuthorizer(this);
