@@ -15,7 +15,7 @@
 <dependency>
     <groupId>com.fujieid.jap.http.adapter</groupId>
     <artifactId>jap-http-jakarta-adapter</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
 </dependency>
 ```
 2. 使用适配器重新构造
@@ -39,7 +39,7 @@ new JakartaResponseAdapter(HttpServletResponse);
 <dependency>
     <groupId>com.fujieid.jap.http.adapter</groupId>
     <artifactId>jap-http-blade-adapter</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
 </dependency>
 ```
 2. 使用适配器重新构造

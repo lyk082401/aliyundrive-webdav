@@ -56,6 +56,17 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
                     return AliyunDriveClientService.this.getTFiles2(key);
                 }
             });
+
+    private LoadingCache<String, AliyunDriveResponse.FileGetDownloadUrlInfo> tFileDownloadUrlCache = CacheBuilder.newBuilder()
+            .initialCapacity(128)
+            .maximumSize(10240)
+            .expireAfterWrite(AliyunDriveConstant.MAX_DOWNLOAD_URL_EXPIRE_TIME_SEC, TimeUnit.SECONDS)
+            .build(new CacheLoader<String, AliyunDriveResponse.FileGetDownloadUrlInfo>() {
+                @Override
+                public AliyunDriveResponse.FileGetDownloadUrlInfo load(String key) throws Exception {
+                    return fileGetDownloadUrlInternal(key);
+                }
+            });
     private final T mAliyunDrive;
 
     public AliyunDriveClientService(Class<? extends IAliyunDrive> aliyunDriveCls, AliyunDriveProperties aliyunDriveProperties) {
@@ -124,6 +135,24 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         query.setOrderBy(AliyunDriveEnum.OrderBy.UpdatedAt);
         query.setOrderDirection(AliyunDriveEnum.OrderDirection.Desc);
             AliyunDriveResponse.FileListInfo res = this.mAliyunDrive.fileList(query).execute();
+            if (res.isError()) {
+                if ("TooManyRequests".equals(res.getCode())) {
+                    try {
+                        TimeUnit.SECONDS.sleep(6);
+                    } catch (InterruptedException e) {
+                    }
+                    res = this.mAliyunDrive.fileList(query).execute();
+                }
+            }
+            if (res.isError()) {
+                if ("TooManyRequests".equals(res.getCode())) {
+                    try {
+                        TimeUnit.SECONDS.sleep(6);
+                    } catch (InterruptedException e) {
+                    }
+                    res = this.mAliyunDrive.fileList(query).execute();
+                }
+            }
             all.addAll(res.getItems());
             String nextMarker = res.getNextMarker();
             if (StringUtils.isEmpty(nextMarker)) {
@@ -398,22 +427,67 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
 
     public Response download(String path, JapHttpRequest request, long size) {
         AliyunDriveFileInfo file = getTFileByPath(path);
-        AliyunDriveRequest.FileGetDownloadUrlInfo query = new AliyunDriveRequest.FileGetDownloadUrlInfo(
-                getDefaultDriveId(), file.getFileId()
-        );
-        query.setExpireSec(AliyunDriveConstant.MAX_DOWNLOAD_URL_EXPIRE_TIME_SEC);
-        AliyunDriveResponse.FileGetDownloadUrlInfo res = this.mAliyunDrive.fileGetDownloadUrl(query).execute();
+        String range = extractRangeHeader(request, size);
+        String ifRange = extractIfRangeHeader(request);
+        AliyunDriveResponse.FileGetDownloadUrlInfo res = fileGetDownloadUrlInfo(file.getFileId());
         if (res.isError()) {
             throw new WebdavException(new WebdavException(res.getCode(), res.getMessage()));
         }
-        String range = extractRangeHeader(request, size);
-        String ifRange = extractIfRangeHeader(request);
         String url = res.getUrl().replaceAll("^https://", "http://");
         try {
             return this.mAliyunDrive.download(url, range, ifRange).execute();
         } catch (Throwable t) {
             throw new WebdavException(t);
         }
+    }
+
+    private synchronized AliyunDriveResponse.FileGetDownloadUrlInfo fileGetDownloadUrlInfo(String fileId) {
+        AliyunDriveResponse.FileGetDownloadUrlInfo res;
+        try {
+            res = tFileDownloadUrlCache.get(fileId);
+            Date expirationDate = res.getExpiration();
+            if (expirationDate != null && new Date().after(expirationDate)) {
+                tFileDownloadUrlCache.invalidate(fileId);
+                res = tFileDownloadUrlCache.get(fileId);
+            }
+            return res;
+        } catch (ExecutionException e) {
+            res = new AliyunDriveResponse.FileGetDownloadUrlInfo();
+            res.setCode(e.getMessage());
+            res.setMessage(e.toString());
+            return res;
+        }
+    }
+
+    private synchronized AliyunDriveResponse.FileGetDownloadUrlInfo fileGetDownloadUrlInternal(String fileId) {
+        AliyunDriveRequest.FileGetDownloadUrlInfo query = new AliyunDriveRequest.FileGetDownloadUrlInfo(
+                getDefaultDriveId(), fileId
+        );
+        query.setExpireSec(AliyunDriveConstant.MAX_DOWNLOAD_URL_EXPIRE_TIME_SEC);
+        AliyunDriveResponse.FileGetDownloadUrlInfo res = this.mAliyunDrive.fileGetDownloadUrl(query).execute();
+        if (res.isError()) {
+            if ("TooManyRequests".equals(res.getCode())) {
+                try {
+                    TimeUnit.SECONDS.sleep(6);
+                } catch (InterruptedException e) {
+                }
+                res = this.mAliyunDrive.fileGetDownloadUrl(query).execute();
+            }
+        }
+        if (res.isError()) {
+            if ("TooManyRequests".equals(res.getCode())) {
+                try {
+                    TimeUnit.SECONDS.sleep(6);
+                } catch (InterruptedException e) {
+                }
+                res = this.mAliyunDrive.fileGetDownloadUrl(query).execute();
+            }
+        }
+        if (res.isError()) {
+            LOGGER.error("fileGetDownloadUrlInternal code: " + res.getCode() + " message: " + res.getMessage());
+            return null;
+        }
+        return res;
     }
 
     private String extractIfRangeHeader(JapHttpRequest request) {

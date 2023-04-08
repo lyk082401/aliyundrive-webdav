@@ -69,7 +69,24 @@ public class AliyunDriveOpenApiImplV1 implements IAliyunDrive, AliyunDriveAuthen
                 .dns(new Dns() {
                     @Override
                     public List<InetAddress> lookup(String hostname) throws UnknownHostException {
-                        return Arrays.asList(Address.getAllByName(hostname));
+                        List<InetAddress> list = new ArrayList<>();
+                        UnknownHostException unknownHostException = null;
+                        try {
+                            list.addAll(Dns.SYSTEM.lookup(hostname));
+                        } catch (UnknownHostException e) {
+                            unknownHostException = e;
+                        }
+                        try {
+                            list.addAll(Arrays.asList(Address.getAllByName(hostname)));
+                        } catch (UnknownHostException e) {
+                            if (unknownHostException == null) {
+                                unknownHostException = e;
+                            }
+                        }
+                        if (list.size() <= 0 && unknownHostException != null) {
+                            throw unknownHostException;
+                        }
+                        return list;
                     }
                 })
                 .followRedirects(true)
