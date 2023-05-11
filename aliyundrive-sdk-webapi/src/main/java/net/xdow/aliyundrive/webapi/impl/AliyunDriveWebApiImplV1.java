@@ -252,7 +252,7 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive, AliyunDriveAuthent
         }
         Map<String, String> params = Collections.singletonMap("refresh_token", query.getRefreshToken());
         return postApiRequest(AliyunDriveWebConstant.API_ACCESS_TOKEN, params,
-                AliyunDriveResponse.AccessTokenInfo.class, FLAG_API_AUTHENTICATION_CALL)
+                AliyunDriveResponse.AccessTokenInfo.class, FLAG_API_ANONYMOUS_CALL)
                 .mockResultOnSuccess(new AliyunDriveWebCall.MockResultCallback<AliyunDriveResponse.AccessTokenInfo>() {
                     @Override
                     public AliyunDriveResponse.AccessTokenInfo onSuccess(AliyunDriveResponse.AccessTokenInfo res) {
