@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'net.xdow'
-version '1.0.5'
+version '1.0.6'
 description 'AliyunDrive Webdav javax implement'
 
 java {

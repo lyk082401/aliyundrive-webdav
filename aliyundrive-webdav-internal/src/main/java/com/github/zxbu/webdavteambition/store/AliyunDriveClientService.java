@@ -138,7 +138,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
             if (res.isError()) {
                 if ("TooManyRequests".equals(res.getCode())) {
                     try {
-                        TimeUnit.SECONDS.sleep(6);
+                        TimeUnit.MILLISECONDS.sleep(300);
                     } catch (InterruptedException e) {
                     }
                     res = this.mAliyunDrive.fileList(query).execute();
@@ -147,7 +147,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
             if (res.isError()) {
                 if ("TooManyRequests".equals(res.getCode())) {
                     try {
-                        TimeUnit.SECONDS.sleep(6);
+                        TimeUnit.MILLISECONDS.sleep(300);
                     } catch (InterruptedException e) {
                     }
                     res = this.mAliyunDrive.fileList(query).execute();
@@ -468,7 +468,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         if (res.isError()) {
             if ("TooManyRequests".equals(res.getCode())) {
                 try {
-                    TimeUnit.SECONDS.sleep(6);
+                    TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                 }
                 res = this.mAliyunDrive.fileGetDownloadUrl(query).execute();
@@ -477,7 +477,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         if (res.isError()) {
             if ("TooManyRequests".equals(res.getCode())) {
                 try {
-                    TimeUnit.SECONDS.sleep(6);
+                    TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                 }
                 res = this.mAliyunDrive.fileGetDownloadUrl(query).execute();

@@ -24,7 +24,7 @@ public class AccessTokenInvalidInterceptor implements Interceptor {
             if (code == 401 || code == 400) {
                 ResponseBody body = response.peekBody(40960);
                 String res = body.string();
-                if (res.contains("AccessTokenInvalid")) {
+                if (res.contains("AccessTokenInvalid") || res.contains("TokenExpired")) {
                     listener.run();
                 }
             }

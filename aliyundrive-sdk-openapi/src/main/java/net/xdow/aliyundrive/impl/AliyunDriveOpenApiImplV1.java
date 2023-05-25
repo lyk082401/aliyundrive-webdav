@@ -52,7 +52,7 @@ public class AliyunDriveOpenApiImplV1 implements IAliyunDrive, AliyunDriveAuthen
                             if (code == 401 || code == 400) {
                                 ResponseBody body = response.peekBody(40960);
                                 String res = body.string();
-                                if (res.contains("AccessTokenInvalid")) {
+                                if (res.contains("AccessTokenInvalid") || res.contains("TokenExpired")) {
                                     AliyunDriveOpenApiImplV1.this.requestNewAccessToken();
                                     return chain.proceed(AliyunDriveOpenApiImplV1.this.buildCommonRequestHeader(request));
                                 }

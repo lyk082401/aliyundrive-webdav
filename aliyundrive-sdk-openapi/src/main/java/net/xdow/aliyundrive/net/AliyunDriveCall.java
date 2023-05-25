@@ -68,6 +68,9 @@ public class AliyunDriveCall<T extends AliyunDriveResponse.GenericMessageInfo> e
         if ("AccessTokenInvalid".equals(t.getCode())) {
             throw new NotAuthenticatedException(t.getMessage() + "(" + t.getCode() + ")");
         }
+        if ("TokenExpired".equals(t.getCode())) {
+            throw new NotAuthenticatedException(t.getMessage() + "(" + t.getCode() + ")");
+        }
     }
 
     public AliyunDriveCall<T> disableAuthorizeCheck() {

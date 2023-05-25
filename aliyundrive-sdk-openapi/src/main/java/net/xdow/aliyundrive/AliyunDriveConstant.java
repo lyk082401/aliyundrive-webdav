@@ -5,7 +5,7 @@ public class AliyunDriveConstant {
     public static final int MAX_DOWNLOAD_URL_EXPIRE_TIME_SEC = 115200; //32h
     public static final int MAX_FILE_CREATE_PART_INFO_LIST_SIZE = 10000;
     public static final String REFERER = "https://www.aliyundrive.com/";
-    public static final String API_HOST = "https://open.aliyundrive.com";
+    public static final String API_HOST = "https://openapi.aliyundrive.com";
     public static final String API_ACCESS_TOKEN = API_HOST + "/oauth/access_token";
     public static final String API_QRCODE_GENERATE = API_HOST + "/oauth/authorize/qrcode";
     public static final String API_QRCODE_IMAGE = API_HOST + "/oauth/qrcode/%s";
