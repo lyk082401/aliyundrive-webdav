@@ -44,9 +44,9 @@ jobs:
         run: echo "::set-output name=today::$(date +'%Y%m%d')"
       -
         name: Setup Graalvm
-        uses: graalvm/setup-graalvm@v1
+        uses: graalvm/setup-graalvm@v1.0.12
         with:
-          version: 'latest'
+          version: '22.3.2'
           java-version: '17'
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
