@@ -68,7 +68,7 @@ jobs:
           path: "./aliyundrive-webdav-${{matrix.target.suffix}}-${{matrix.target.arch}}.exe"
       -
         name: Upload artifacts
-        uses: Wandalen/wretry.action@master
+        uses: Wandalen/wretry.action@v1.0.36
         with:
           action: bxb100/action-upload-webdav@v1
           with: |
