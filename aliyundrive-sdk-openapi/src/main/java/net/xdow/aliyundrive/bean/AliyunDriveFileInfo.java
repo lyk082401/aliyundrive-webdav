@@ -12,12 +12,18 @@ public class AliyunDriveFileInfo extends AliyunDriveResponse.GenericMessageInfo 
     private String parentFileId;
     private String name;
     private Long size;
+    //fileList Api默认不取回
     private String fileExtension;
+    //fileList Api默认不取回
     private String contentHash;
+    //fileList Api默认不取回
     private AliyunDriveEnum.Category category;
     private AliyunDriveEnum.Type type;
+    //fileList Api默认不取回
     private String thumbnail;
+    //fileList Api默认不取回
     private String url;
+    //fileList Api默认不取回
     @Deprecated
     private String downloadUrl;
     private Date createdAt;

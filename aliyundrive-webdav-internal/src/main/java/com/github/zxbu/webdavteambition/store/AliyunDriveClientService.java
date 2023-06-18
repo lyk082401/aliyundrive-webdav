@@ -133,6 +133,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         query.setMarker(marker);
         query.setLimit(200);
         query.setOrderBy(AliyunDriveEnum.OrderBy.UpdatedAt);
+        query.setFields("drive_id,file_id,parent_file_id,name,size,type,created_at,updated_at");
         query.setOrderDirection(AliyunDriveEnum.OrderDirection.Desc);
             AliyunDriveResponse.FileListInfo res = this.mAliyunDrive.fileList(query).execute();
             if (res.isError()) {
