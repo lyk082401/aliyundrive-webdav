@@ -297,6 +297,11 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive, AliyunDriveAuthent
     }
 
     @Override
+    public AliyunDriveCall<AliyunDriveResponse.FileGetInfo> fileGetByPath(AliyunDriveRequest.FileGetByPathInfo query) {
+        return null;
+    }
+
+    @Override
     public AliyunDriveCall<AliyunDriveResponse.FileBatchGetInfo> fileBatchGet(AliyunDriveRequest.FileBatchGetInfo query) {
         List<AliyunDriveRequest.FileBatchGetInfo.FileInfo> fileList = query.getFileList();
         List<AliyunDriveFileInfo> items = new ArrayList<>();

@@ -37,12 +37,16 @@ public class VirtualTFileService {
         tFileMap.put(fileCreateInfo.getFileId(), convert(fileCreateInfo));
     }
 
-    public void updateLength(String parentId, String fileId, long length) {
+    public AliyunDriveFileInfo get(String parentId, String fileId) {
         Map<String, AliyunDriveFileInfo> tFileMap = virtualTFileMap.get(parentId);
         if (tFileMap == null) {
-            return;
+            return null;
         }
-        AliyunDriveFileInfo tFile = tFileMap.get(fileId);
+        return tFileMap.get(fileId);
+    }
+
+    public void updateLength(String parentId, String fileId, long length) {
+        AliyunDriveFileInfo tFile = get(parentId, fileId);
         if (tFile == null) {
             return;
         }

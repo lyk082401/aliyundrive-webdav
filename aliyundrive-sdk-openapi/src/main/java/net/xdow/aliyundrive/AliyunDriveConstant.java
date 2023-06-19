@@ -16,6 +16,7 @@ public class AliyunDriveConstant {
     public static final String API_USER_GET_VIP_INFO = API_HOST + "/adrive/v1.0/user/getVipInfo";
     public static final String API_FILE_LIST = API_HOST + "/adrive/v1.0/openFile/list";
     public static final String API_FILE_GET = API_HOST + "/adrive/v1.0/openFile/get";
+    public static final String API_FILE_GET_BY_PATH = API_HOST + "/adrive/v1.0/openFile/get_by_path";
     public static final String API_FILE_BATCH_GET = API_HOST + "/adrive/v1.0/openFile/batch/get";
     public static final String API_FILE_GET_DOWNLOAD_URL = API_HOST + "/adrive/v1.0/openFile/getDownloadUrl";
     public static final String API_FILE_CREATE = API_HOST + "/adrive/v1.0/openFile/create";

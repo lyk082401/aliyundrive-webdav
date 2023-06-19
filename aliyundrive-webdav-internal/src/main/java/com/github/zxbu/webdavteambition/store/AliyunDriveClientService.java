@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyunDriveAuthorizer {
@@ -46,14 +48,38 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
     private AliyunDriveProperties mAliyunDriveProperties;
     // / 字符占位符
     private static String FILE_PATH_PLACE_HOLDER = "[@-@]";
-    private LoadingCache<String, Set<AliyunDriveFileInfo>> tFilesCache = CacheBuilder.newBuilder()
+    private ScheduledExecutorService mTaskPool = Executors.newScheduledThreadPool(1);
+
+    private LoadingCache<String, Set<AliyunDriveFileInfo>> tFileListCache = CacheBuilder.newBuilder()
             .initialCapacity(128)
             .maximumSize(10240)
-            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(new CacheLoader<String, Set<AliyunDriveFileInfo>>() {
                 @Override
                 public Set<AliyunDriveFileInfo> load(String key) throws Exception {
-                    return AliyunDriveClientService.this.getTFiles2(key);
+                    return AliyunDriveClientService.this.getTFileListInternal(key);
+                }
+            });
+
+    //异步刷新器, 10秒间隔刷新一次
+    private LoadingCache<String, Object> tFileListAsyncRefresherCache = CacheBuilder.newBuilder()
+            .initialCapacity(128)
+            .maximumSize(10240)
+            .expireAfterAccess(10, TimeUnit.SECONDS)
+            .build(new CacheLoader<String, Object>() {
+                @Override
+                public Object load(final String key) throws Exception {
+                    mTaskPool.schedule(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                tFileListCache.refresh(key);
+                            } catch (Exception e) {
+                                LOGGER.error("", e);
+                            }
+                        }
+                    }, 1, TimeUnit.SECONDS);
+                    return new Object();
                 }
             });
 
@@ -90,12 +116,23 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         return this.mAliyunDrive;
     }
 
-    public Set<AliyunDriveFileInfo> getTFiles(final String fileId) {
+    public Set<AliyunDriveFileInfo> getTFileListCached(final String fileId) {
         try {
-            Set<AliyunDriveFileInfo> tFiles = tFilesCache.get(fileId);
+            Set<AliyunDriveFileInfo> tFiles = tFileListCache.get(fileId);
             Set<AliyunDriveFileInfo> all = new LinkedHashSet<>(tFiles);
             // 获取上传中的文件列表
             Collection<AliyunDriveFileInfo> virtualTFiles = VirtualTFileService.getInstance().list(fileId);
+            Map<String, AliyunDriveFileInfo> virtualTFileIdMap = new HashMap<>();
+            for (AliyunDriveFileInfo vFileInfo : virtualTFiles) {
+                virtualTFileIdMap.put(vFileInfo.getFileId(), vFileInfo);
+            }
+            //如果文件真实存在以实际为准, 删除虚拟文件
+            for (AliyunDriveFileInfo fileInfo : tFiles) {
+                AliyunDriveFileInfo vFileInfo = virtualTFileIdMap.get(fileInfo.getFileId());
+                if (vFileInfo != null) {
+                    virtualTFiles.remove(vFileInfo);
+                }
+            }
             all.addAll(virtualTFiles);
             return all;
         } catch (ExecutionException e) {
@@ -103,7 +140,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         }
     }
 
-    private Set<AliyunDriveFileInfo> getTFiles2(String nodeId) {
+    private Set<AliyunDriveFileInfo> getTFileListInternal(String nodeId) {
         List<AliyunDriveFileInfo> tFileList = fileListFromApi(nodeId, null, new ArrayList<AliyunDriveFileInfo>());
         Collections.sort(tFileList, new Comparator<AliyunDriveFileInfo>() {
             @Override
@@ -127,14 +164,14 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
 
     private List<AliyunDriveFileInfo> fileListFromApi(String nodeId, String marker, List<AliyunDriveFileInfo> all) {
         try {
-        AliyunDriveRequest.FileListInfo query = new AliyunDriveRequest.FileListInfo(
-                getDefaultDriveId(), nodeId
-        );
-        query.setMarker(marker);
-        query.setLimit(200);
-        query.setOrderBy(AliyunDriveEnum.OrderBy.UpdatedAt);
-        query.setFields("drive_id,file_id,parent_file_id,name,size,type,created_at,updated_at");
-        query.setOrderDirection(AliyunDriveEnum.OrderDirection.Desc);
+            AliyunDriveRequest.FileListInfo query = new AliyunDriveRequest.FileListInfo(
+                    getDefaultDriveId(), nodeId
+            );
+            query.setMarker(marker);
+            query.setLimit(200);
+            query.setOrderBy(AliyunDriveEnum.OrderBy.UpdatedAt);
+            query.setFields("drive_id,file_id,parent_file_id,name,size,type,created_at,updated_at");
+            query.setOrderDirection(AliyunDriveEnum.OrderDirection.Desc);
             AliyunDriveResponse.FileListInfo res = this.mAliyunDrive.fileList(query).execute();
             if (res.isError()) {
                 if ("TooManyRequests".equals(res.getCode())) {
@@ -194,10 +231,11 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
     }
 
     public void uploadPre(String path, long size, InputStream inputStream, JapHttpResponse response) {
-        VirtualTFileService virtualTFileService = VirtualTFileService.getInstance();
+        boolean uploadSuccess = false;
+        final VirtualTFileService virtualTFileService = VirtualTFileService.getInstance();
         path = normalizingPath(path);
         PathInfo pathInfo = getPathInfo(path);
-        AliyunDriveFileInfo parent = getTFileByPath(pathInfo.getParentPath());
+        final AliyunDriveFileInfo parent = getTFileByPath(pathInfo.getParentPath());
         if (parent == null) {
             return;
         }
@@ -213,7 +251,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
             }
 
             AliyunDriveResponse.FileCreateInfo fileCreateInfo = uploadCreateFile(parent.getFileId(), pathInfo.getName(), size);
-            String fileId = fileCreateInfo.getFileId();
+            final String fileId = fileCreateInfo.getFileId();
             String uploadId = fileCreateInfo.getUploadId();
             List<AliyunDriveFilePartInfo> partInfoList = fileCreateInfo.getPartInfoList();
             try {
@@ -254,16 +292,29 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
                 }
                 if (totalUploadedSize == size) {
                     uploadComplete(fileId, uploadId);
-                    LOGGER.info("文件上传成功。文件名：{}", path);
+                    uploadSuccess = true;
+                    AliyunDriveFileInfo vTFile = virtualTFileService.get(parent.getFileId(), fileId);
+                    vTFile.setSize(totalUploadedSize);
+                    LOGGER.info("文件上传成功。文件名：{} 文件大小: {} 已上传: {} 虚拟文件: {}", path, size, totalUploadedSize, vTFile);
                 } else {
                     LOGGER.info("文件上传失败。文件名：{} 文件大小: {} 已上传: {}", path, size, totalUploadedSize);
                 }
             } finally {
-                virtualTFileService.remove(parent.getFileId(), fileId);
+                if (!uploadSuccess) {
+                    virtualTFileService.remove(parent.getFileId(), fileId);
+                } else {
+                    //延迟删除虚拟文件,防止刚上传拿不到最新的文件
+                    mTaskPool.schedule(new Runnable() {
+                        @Override
+                        public void run() {
+                            virtualTFileService.remove(parent.getFileId(), fileId);
+                        }
+                    }, 120, TimeUnit.SECONDS);
+                }
                 clearCache(fileId);
             }
         } finally {
-            clearCache(parent.getFileId());
+            clearCacheAsync(parent.getFileId());
         }
     }
 
@@ -517,11 +568,9 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
 
     private AliyunDriveFileInfo getNodeIdByPath2(String path) {
         if (StringUtils.isEmpty(path)) {
-            path = rootPath;
-        }
-        if (path.equals(rootPath)) {
             return getRootTFile();
         }
+
         PathInfo pathInfo = getPathInfo(path);
         AliyunDriveFileInfo tFile = getTFileByPath(pathInfo.getParentPath());
         if (tFile == null) {
@@ -564,7 +613,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
     }
 
     public AliyunDriveFileInfo getNodeIdByParentId(String parentId, String name) {
-        Set<AliyunDriveFileInfo> tFiles = getTFiles(parentId);
+        Set<AliyunDriveFileInfo> tFiles = getTFileListCached(parentId);
         for (AliyunDriveFileInfo tFile : tFiles) {
             if (tFile.getName().equals(name)) {
                 return tFile;
@@ -587,11 +636,23 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
             return;
         }
         LOGGER.info("clearCache! {}", fileId);
-        tFilesCache.invalidate(fileId);
+        tFileListCache.invalidate(fileId);
+    }
+
+    public void clearCacheAsync(String fileId) {
+        if (StringUtils.isEmpty(fileId)) {
+            return;
+        }
+        LOGGER.info("clearCacheAsync! {}", fileId);
+        try {
+            tFileListAsyncRefresherCache.get(fileId);
+        } catch (ExecutionException e) {
+            LOGGER.error("", e);
+        }
     }
 
     public void clearCacheAll() {
-        tFilesCache.invalidateAll();
+        tFileListCache.invalidateAll();
     }
 
     private void loginAsync(String refreshToken) {

@@ -28,6 +28,7 @@ public interface IAliyunDrive {
     AliyunDriveCall<AliyunDriveResponse.UserSpaceInfo> getUserSpaceInfo();
     AliyunDriveCall<AliyunDriveResponse.UserDriveInfo> getUserDriveInfo();
     AliyunDriveCall<AliyunDriveResponse.FileGetInfo> fileGet(AliyunDriveRequest.FileGetInfo query);
+    AliyunDriveCall<AliyunDriveResponse.FileGetInfo> fileGetByPath(AliyunDriveRequest.FileGetByPathInfo query);
     AliyunDriveCall<AliyunDriveResponse.FileBatchGetInfo> fileBatchGet(AliyunDriveRequest.FileBatchGetInfo query);
     AliyunDriveCall<AliyunDriveResponse.FileGetDownloadUrlInfo> fileGetDownloadUrl(AliyunDriveRequest.FileGetDownloadUrlInfo query);
     AliyunDriveCall<AliyunDriveResponse.FileCreateInfo> fileCreate(AliyunDriveRequest.FileCreateInfo query);

@@ -51,6 +51,14 @@ public class AliyunDriveRequest {
     }
 
     @Data
+    public static class FileGetByPathInfo {
+        @NonNull
+        private String driveId;
+        @NonNull
+        private String filePath;
+    }
+
+    @Data
     public static class FileBatchGetInfo {
 
         @NonNull

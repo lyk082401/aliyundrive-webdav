@@ -206,6 +206,12 @@ public class AliyunDriveOpenApiImplV1 implements IAliyunDrive, AliyunDriveAuthen
     }
 
     @Override
+    public AliyunDriveCall<AliyunDriveResponse.FileGetInfo> fileGetByPath(AliyunDriveRequest.FileGetByPathInfo query) {
+        return postApiRequest(AliyunDriveConstant.API_FILE_GET_BY_PATH, query,
+                AliyunDriveResponse.FileGetInfo.class, FLAG_API_AUTHENTICATION_CALL);
+    }
+
+    @Override
     public AliyunDriveCall<AliyunDriveResponse.FileBatchGetInfo> fileBatchGet(AliyunDriveRequest.FileBatchGetInfo query) {
         return postApiRequest(AliyunDriveConstant.API_FILE_BATCH_GET, query,
                 AliyunDriveResponse.FileBatchGetInfo.class, FLAG_API_AUTHENTICATION_CALL);

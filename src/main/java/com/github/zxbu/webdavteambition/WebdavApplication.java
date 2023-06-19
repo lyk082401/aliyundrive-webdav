@@ -6,6 +6,7 @@ import com.github.zxbu.webdavteambition.filter.ErrorFilter;
 import com.github.zxbu.webdavteambition.model.PathInfo;
 import com.github.zxbu.webdavteambition.store.AliyunDriveFileSystemStore;
 import com.github.zxbu.webdavteambition.util.AliyunDriveClientServiceHolder;
+import net.sf.webdav.StoredObject;
 import net.xdow.aliyundrive.bean.*;
 import net.xdow.aliyundrive.impl.AliyunDriveOpenApiImplV1;
 import net.xdow.aliyundrive.webapi.bean.AliyunDriveWebRequest;
@@ -89,6 +90,7 @@ import java.util.Map;
         AliyunDriveOpenApiImplV1.class,
         AliyunDriveWebApiImplV1.class,
         AliyunDriveFileSystemStore.class,
+        StoredObject.class,
 })
 public class WebdavApplication {
     public static void main(String[] args) {

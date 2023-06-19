@@ -31,7 +31,7 @@ public class AliyunDriveCronTask {
         try {
             LOGGER.info("定时刷新 Refresh Token ↓↓↓↓↓");
             AliyunDriveFileInfo root = service.getTFileByPath("/");
-            service.getTFiles(root.getFileId());
+            service.getTFileListCached(root.getFileId());
         } catch (Throwable e) {
             LOGGER.error("", e);
         } finally {

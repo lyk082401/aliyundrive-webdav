@@ -13,6 +13,7 @@ import net.sf.webdav.exceptions.WebdavException;
 import net.xdow.aliyundrive.bean.AliyunDriveEnum;
 import net.xdow.aliyundrive.bean.AliyunDriveFileInfo;
 import net.xdow.aliyundrive.exception.NotAuthenticatedException;
+import net.xdow.aliyundrive.util.JsonUtils;
 import net.xdow.aliyundrive.webapi.impl.AliyunDriveWebApiImplV1;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
@@ -144,7 +145,7 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
             return new String[0];
         }
         try {
-            Set<AliyunDriveFileInfo> tFileList = this.mAliyunDriveClientService.getTFiles(tFile.getFileId());
+            Set<AliyunDriveFileInfo> tFileList = this.mAliyunDriveClientService.getTFileListCached(tFile.getFileId());
             List<String> nameList = new ArrayList<>();
             for (AliyunDriveFileInfo file : tFileList) {
                 tFile = file;
@@ -166,13 +167,16 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
     }
 
     private long getResourceLength2(ITransaction transaction, String path) {
-        LOGGER.info("getResourceLength: {}", path);
-        AliyunDriveFileInfo tFile = mAliyunDriveClientService.getTFileByPath(path);
-        if (tFile == null || tFile.getSize() == null) {
-            return 384;
+        long size = 0;
+        try {
+            AliyunDriveFileInfo tFile = mAliyunDriveClientService.getTFileByPath(path);
+            if (tFile == null || tFile.getSize() == null) {
+                return size = 384;
+            }
+            return size = tFile.getSize();
+        } finally {
+            LOGGER.info("getResourceLength: {} size: {}", path, size);
         }
-
-        return tFile.getSize();
     }
 
     @Override
@@ -202,20 +206,24 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
 
     @Override
     public StoredObject getStoredObject(ITransaction transaction, String uri) {
-        if ("/favicon.ico".equals(uri)) {
-            return null;
+        StoredObject result = null;
+        try {
+            if ("/favicon.ico".equals(uri)) {
+                return result = null;
+            }
+            AliyunDriveFileInfo tFile = mAliyunDriveClientService.getTFileByPath(uri);
+            if (tFile != null) {
+                StoredObject so = new StoredObject();
+                so.setFolder(tFile.getType() == AliyunDriveEnum.Type.Folder);
+                so.setResourceLength(getResourceLength2(transaction, uri));
+                so.setCreationDate(tFile.getCreatedAt());
+                so.setLastModified(tFile.getUpdatedAt());
+                return result = so;
+            }
+            return result = null;
+        } finally {
+            LOGGER.info("getStoredObject: {} result: {}", uri, JsonUtils.toJson(result));
         }
-        LOGGER.info("getStoredObject: {}", uri);
-        AliyunDriveFileInfo tFile = mAliyunDriveClientService.getTFileByPath(uri);
-        if (tFile != null) {
-            StoredObject so = new StoredObject();
-            so.setFolder(tFile.getType() == AliyunDriveEnum.Type.Folder);
-            so.setResourceLength(getResourceLength2(transaction, uri));
-            so.setCreationDate(tFile.getCreatedAt());
-            so.setLastModified(tFile.getUpdatedAt());
-            return so;
-        }
-        return null;
     }
 
     @Override
