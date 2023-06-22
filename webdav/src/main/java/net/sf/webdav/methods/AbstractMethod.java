@@ -472,38 +472,20 @@ public abstract class AbstractMethod implements IMethodExecutor {
             IResourceLocks resourceLocks, String path) throws IOException,
             LockFailedException {
 
-        LockedObject loByPath = resourceLocks.getLockedObjectByPath(
-                transaction, path);
-        if (loByPath != null) {
-
-            if (loByPath.isShared())
-                return true;
-
-            // the resource is locked
-            String[] lockTokens = getLockIdFromIfHeader(req);
-            String lockToken = null;
-            if (lockTokens != null)
-                lockToken = lockTokens[0];
-            else {
-                return false;
-            }
-            if (lockToken != null) {
-                LockedObject loByIf = resourceLocks.getLockedObjectByID(
-                        transaction, lockToken);
-                if (loByIf == null) {
-                    // no locked resource to the given lockToken
-                    return false;
-                }
-                if (!loByIf.equals(loByPath)) {
-                    loByIf = null;
-                    return false;
-                }
-                loByIf = null;
-            }
-
+        LockedObject resourceLock = resourceLocks.getLockedObjectByPath(transaction, path);
+        if (resourceLock == null || resourceLock.isShared() || resourceLock.hasExpired()) {
+            return true;
         }
-        loByPath = null;
-        return true;
+
+        // the resource is locked
+        String[] requestLockTokens = getLockIdFromIfHeader(req);
+        String requestLockToken = null;
+        if (requestLockTokens != null) {
+            requestLockToken = requestLockTokens[0];
+            LockedObject lockedObjectByToken = resourceLocks.getLockedObjectByID(transaction, requestLockToken);
+            return lockedObjectByToken != null && lockedObjectByToken.equals(resourceLock);
+        }
+        return false;
     }
 
     /**

@@ -28,6 +28,9 @@ import java.util.Map;
  */
 public class XMLWriter {
 
+    private static org.slf4j.Logger LOG = org.slf4j.LoggerFactory
+            .getLogger(XMLWriter.class);
+
     // -------------------------------------------------------------- Constants
 
     /**
@@ -204,6 +207,9 @@ public class XMLWriter {
      * Send data and reinitializes buffer.
      */
     public void sendData() throws IOException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("sendData _writer: {} _buffer: {}", _writer, _buffer.toString());
+        }
         if (_writer != null) {
             _writer.write(_buffer.toString());
             _writer.flush();

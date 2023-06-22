@@ -19,9 +19,7 @@ import net.xdow.aliyundrive.net.AliyunDriveCall;
 import net.xdow.aliyundrive.util.JsonUtils;
 import net.xdow.aliyundrive.webapi.AliyunDriveWebConstant;
 import net.xdow.aliyundrive.webapi.impl.AliyunDriveWebApiImplV1;
-import okhttp3.Call;
-import okhttp3.HttpUrl;
-import okhttp3.Response;
+import okhttp3.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -243,7 +241,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
             // 如果已存在，先删除
             AliyunDriveFileInfo tfile = getTFileByPath(path);
             if (tfile != null) {
-                if (tfile.getSize() == size) {
+                if (size > 0 && tfile.getSize() == size) {
                     //如果文件大小一样，则不再上传
                     return;
                 }
@@ -257,9 +255,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
             try {
                 long totalUploadedSize = 0;
                 if (partInfoList != null) {
-                    if (size > 0) {
-                        virtualTFileService.createVirtualFile(parent.getFileId(), fileCreateInfo);
-                    }
+                    virtualTFileService.createVirtualFile(parent.getFileId(), fileCreateInfo);
                     LOGGER.info("文件预处理成功，开始上传。文件名：{}，上传URL数量：{}", path, partInfoList.size());
 
                     byte[] buffer = new byte[chunkSize];
@@ -290,7 +286,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
                         }
                     }
                 }
-                if (totalUploadedSize == size) {
+                if (size == 0 || totalUploadedSize == size) {
                     uploadComplete(fileId, uploadId);
                     uploadSuccess = true;
                     AliyunDriveFileInfo vTFile = virtualTFileService.get(parent.getFileId(), fileId);
@@ -443,6 +439,7 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
     public void remove(String path) {
         path = normalizingPath(path);
         AliyunDriveFileInfo tFile = getTFileByPath(path);
+        VirtualTFileService.getInstance().remove(tFile.getParentFileId(), tFile.getFileId());
         remove(tFile);
     }
 
@@ -478,6 +475,14 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
     }
 
     public Response download(String path, JapHttpRequest request, long size) {
+        if (size == 0) {
+            return new Response.Builder()
+                    .request(new Request.Builder().url(request.getRequestUrl().toString()).build())
+                    .code(204)
+                    .protocol(Protocol.HTTP_1_1)
+                    .message("")
+                    .build();
+        }
         AliyunDriveFileInfo file = getTFileByPath(path);
         String range = extractRangeHeader(request, size);
         String ifRange = extractIfRangeHeader(request);
@@ -537,7 +542,8 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         }
         if (res.isError()) {
             LOGGER.error("fileGetDownloadUrlInternal code: " + res.getCode() + " message: " + res.getMessage());
-            return null;
+            res.setUrl("");
+            return res;
         }
         return res;
     }

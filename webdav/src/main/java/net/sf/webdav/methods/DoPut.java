@@ -60,16 +60,26 @@ public class DoPut extends AbstractMethod {
 
             _userAgent = req.getHeader("User-Agent");
 
-            Hashtable<String, Integer> errorList = new Hashtable<>();
-
-            if (!checkLocks(transaction, req, resp, _resourceLocks, parentPath)) {
-                resp.setStatus(WebdavStatus.SC_LOCKED);
-                return; // parent is locked
+            if (isOSXFinder() && req.getContentLength() == 0) {
+                // OS X Finder sends 2 PUTs; first has 0 content, second has content.
+                // This is the first one, so we'll ignore it ...
+                LOG.trace("-- First of multiple OS-X Finder PUT calls at {0}", path);
             }
 
-            if (!checkLocks(transaction, req, resp, _resourceLocks, path)) {
-                resp.setStatus(WebdavStatus.SC_LOCKED);
-                return; // resource is locked
+            Hashtable<String, Integer> errorList = new Hashtable<>();
+            if (isOSXFinder()) {
+                // OS X Finder sends 2 PUTs; first has 0 content, second has content.
+                // This is the second one that was preceded by a LOCK, so don't need to check the locks ...
+            } else {
+                if (!checkLocks(transaction, req, resp, _resourceLocks, parentPath)) {
+                    resp.setStatus(WebdavStatus.SC_LOCKED);
+                    return; // parent is locked
+                }
+
+                if (!checkLocks(transaction, req, resp, _resourceLocks, path)) {
+                    resp.setStatus(WebdavStatus.SC_LOCKED);
+                    return; // resource is locked
+                }
             }
 
             String tempLockOwner = "doPut" + System.currentTimeMillis() + String.valueOf(req);
@@ -150,7 +160,9 @@ public class DoPut extends AbstractMethod {
                                     .getInputStream(), null, null);
 
                     so = _store.getStoredObject(transaction, path);
-                    if (so != null && resourceLength > 0) {
+                    if (so == null) {
+                        resp.setStatus(WebdavStatus.SC_NOT_FOUND);
+                    } else if (resourceLength != -1) {
                         so.setResourceLength(resourceLength);
                     }
                     // Now lets report back what was actually saved
@@ -160,6 +172,20 @@ public class DoPut extends AbstractMethod {
                 } catch (WebdavException e) {
                     resp.sendError(WebdavStatus.SC_INTERNAL_SERVER_ERROR);
                 } finally {
+                    //上传完主动释放这个文件的锁, finder这玩意有时候不会主动调用UNLOCK真是奇怪
+                    String[] lockTokens = getLockIdFromIfHeader(req);
+                    if (lockTokens != null) {
+                        for (String lockToken : lockTokens) {
+                            if (lockToken == null || lockToken.length() == 0) {
+                                continue;
+                            }
+                            LockedObject lo = _resourceLocks.getLockedObjectByID(
+                                    transaction, lockToken);
+                            if (lo != null) {
+                                lo.removeLockedObject();
+                            }
+                        }
+                    }
                     _resourceLocks.unlockTemporaryLockedObjects(transaction,
                             path, tempLockOwner);
                 }
@@ -176,12 +202,11 @@ public class DoPut extends AbstractMethod {
      *
      */
     private void doUserAgentWorkaround(JapHttpResponse resp) {
-        if (_userAgent != null && _userAgent.indexOf("WebDAVFS") != -1
-                && _userAgent.indexOf("Transmit") == -1) {
+        if (isOSXFinder()) {
             LOG.trace("DoPut.execute() : do workaround for user agent '"
                     + _userAgent + "'");
             resp.setStatus(WebdavStatus.SC_CREATED);
-        } else if (_userAgent != null && _userAgent.indexOf("Transmit") != -1) {
+        } else if (_userAgent != null && _userAgent.contains("Transmit")) {
             // Transmit also uses WEBDAVFS 1.x.x but crashes
             // with SC_CREATED response
             LOG.trace("DoPut.execute() : do workaround for user agent '"
@@ -190,5 +215,9 @@ public class DoPut extends AbstractMethod {
         } else {
             resp.setStatus(WebdavStatus.SC_CREATED);
         }
+    }
+
+    private boolean isOSXFinder() {
+        return (_userAgent != null && _userAgent.contains("WebDAVFS") && !_userAgent.contains("Transmit"));
     }
 }

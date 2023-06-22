@@ -78,6 +78,9 @@ public class DoLock extends AbstractMethod {
 
             if (!checkLocks(transaction, req, resp, _resourceLocks, _path)) {
                 resp.setStatus(WebdavStatus.SC_LOCKED);
+                //finder 似乎会重复lock, 打出lock信息让他适应
+                LockedObject resourceLock = _resourceLocks.getLockedObjectByPath(transaction, _path);
+                generateXMLReport(transaction, resp, resourceLock);
                 return; // resource is locked
             }
 
@@ -90,7 +93,7 @@ public class DoLock extends AbstractMethod {
             // because executing a LOCK without lock information causes a
             // SC_BAD_REQUEST
             _userAgent = req.getHeader("User-Agent");
-            if (_userAgent != null && _userAgent.indexOf("Darwin") != -1) {
+            if (_userAgent != null && _userAgent.contains("Darwin")) {
                 _macLockRequest = true;
 
                 String timeString = Long.toString(System.currentTimeMillis());
@@ -202,14 +205,14 @@ public class DoLock extends AbstractMethod {
             }
             nullSo = _store.getStoredObject(transaction, _path);
             if (nullSo == null) {
-                nullSo = new StoredObject();
+                resp.setStatus(WebdavStatus.SC_NOT_FOUND);
+            } else {
+                // define the newly created resource as null-resource
+                nullSo.setNullResource(true);
+
+                // Thats the locking itself
+                executeLock(transaction, req, resp);
             }
-            // define the newly created resource as null-resource
-            nullSo.setNullResource(true);
-
-            // Thats the locking itself
-            executeLock(transaction, req, resp);
-
         } catch (LockFailedException e) {
             sendLockFailError(transaction, req, resp);
         } catch (WebdavException e) {

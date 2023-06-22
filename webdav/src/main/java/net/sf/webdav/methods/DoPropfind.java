@@ -134,6 +134,7 @@ public class DoPropfind extends AbstractMethod {
                 }
 
                 HashMap<String, String> namespaces = new HashMap<>();
+                namespaces.put("http://www.apple.com/webdav_fs/props/", "S");
                 namespaces.put("DAV:", "D");
 
                 if (propertyFindType == FIND_BY_PROPERTY) {
@@ -233,7 +234,7 @@ public class DoPropfind extends AbstractMethod {
             throws WebdavException {
 
         StoredObject so = _store.getStoredObject(transaction, path);
-
+        if (so == null) return;
         boolean isFolder = so.isFolder();
         final String creationdate = creationDateFormat(so.getCreationDate());
         final String lastModified = lastModifiedDateFormat(so.getLastModified());
@@ -303,6 +304,7 @@ public class DoPropfind extends AbstractMethod {
                 writeLockDiscoveryElements(transaction, generatedXML, path);
 
                 generatedXML.writeProperty("DAV::source", "");
+                generatedXML.writeProperty("http://www.apple.com/webdav_fs/props/:appledoubleheader", "AAUWBwACAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAACAAAAJgAAACwAAAAJAAAAMgAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
                 generatedXML.writeElement("DAV::prop", XMLWriter.CLOSING);
                 generatedXML.writeElement("DAV::status", XMLWriter.OPENING);
                 generatedXML.writeText(status);
@@ -314,6 +316,9 @@ public class DoPropfind extends AbstractMethod {
                 generatedXML.writeElement("DAV::propstat", XMLWriter.OPENING);
                 generatedXML.writeElement("DAV::prop", XMLWriter.OPENING);
 
+                generatedXML.writeElement("http://www.apple.com/webdav_fs/props/:appledoubleheader", XMLWriter.NO_CONTENT);
+                generatedXML.writeElement("DAV::quota", XMLWriter.NO_CONTENT);
+                generatedXML.writeElement("DAV::quotaused", XMLWriter.NO_CONTENT);
                 generatedXML.writeElement("DAV::quota-available-bytes", XMLWriter.NO_CONTENT);
                 generatedXML.writeElement("DAV::quota-used-bytes", XMLWriter.NO_CONTENT);
                 generatedXML.writeElement("DAV::creationdate", XMLWriter.NO_CONTENT);
@@ -338,7 +343,7 @@ public class DoPropfind extends AbstractMethod {
                 generatedXML.writeText(status);
                 generatedXML.writeElement("DAV::status", XMLWriter.CLOSING);
                 generatedXML.writeElement("DAV::propstat", XMLWriter.CLOSING);
-                generatedXML.writeElement("DAV::propstat", XMLWriter.CLOSING);
+
                 break;
             case FIND_BY_PROPERTY:
 
@@ -354,7 +359,6 @@ public class DoPropfind extends AbstractMethod {
                 while (properties.hasMoreElements()) {
 
                     String property = (String) properties.nextElement();
-
                     switch (property) {
                         case "DAV::creationdate":
                             generatedXML.writeProperty("DAV::creationdate", creationdate);
@@ -419,16 +423,18 @@ public class DoPropfind extends AbstractMethod {
                         case "DAV::lockdiscovery":
                             writeLockDiscoveryElements(transaction, generatedXML, path);
                             break;
+                        case "DAV::quota":
                         case "DAV::quota-available-bytes":
                             long availableBytes = _store.getQuotaAvailableBytes(transaction);
                             if (availableBytes >= 0) {
-                                generatedXML.writeProperty("DAV::quota-available-bytes", String.valueOf(availableBytes));
+                                generatedXML.writeProperty(property, String.valueOf(availableBytes));
                             }
                             break;
                         case "DAV::quota-used-bytes":
+                        case "DAV::quotaused":
                             long usedBytes = _store.getQuotaUsedBytes(transaction);
                             if (usedBytes >= 0) {
-                                generatedXML.writeProperty("DAV::quota-used-bytes", String.valueOf(usedBytes));
+                                generatedXML.writeProperty(property, String.valueOf(usedBytes));
                             }
                             break;
                         default:

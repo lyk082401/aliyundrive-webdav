@@ -16,10 +16,12 @@ import net.xdow.aliyundrive.exception.NotAuthenticatedException;
 import net.xdow.aliyundrive.util.JsonUtils;
 import net.xdow.aliyundrive.webapi.impl.AliyunDriveWebApiImplV1;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +32,12 @@ import java.util.List;
 import java.util.Set;
 
 public class AliyunDriveFileSystemStore implements IWebdavStore {
+
+    /**
+     * OS X attempts to create ".DS_Store" files to store a folder's icon positions and background image. We choose not to store
+     * these in our implementation, so we ignore requests to create them.
+     */
+    private static final String DS_STORE_SUFFIX = ".DS_Store";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AliyunDriveFileSystemStore.class);
 
@@ -96,14 +104,26 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
             LOGGER.debug("{} downResponse: {} = {}", resourceUri, name, downResponse.header(name));
             response.addHeader(name, downResponse.header(name));
         }
-        response.setContentLengthLong(downResponse.body().contentLength());
+        ResponseBody body = downResponse.body();
+        if (body == null) {
+            response.setContentLengthLong(0L);
+            response.setStatus(downResponse.code());
+            return new ByteArrayInputStream(new byte[0]);
+        }
+        response.setContentLengthLong(body.contentLength());
         response.setStatus(downResponse.code());
-        return downResponse.body().byteStream();
+        return body.byteStream();
     }
 
     @Override
     public long setResourceContent(ITransaction transaction, String resourceUri, InputStream content, String contentType, String characterEncoding) {
         LOGGER.info("setResourceContent {}", resourceUri);
+        // Mac OS X workaround from Drools Guvnor
+        if (resourceUri.endsWith(DS_STORE_SUFFIX)) return 0;
+        String resourceName = resourceNameFromResourcePath(resourceUri);
+        if (resourceName.startsWith("._")) {
+            return -1;
+        }
         JapHttpRequest request = transaction.getRequest();
         JapHttpResponse response = transaction.getResponse();
 
@@ -182,6 +202,10 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
     @Override
     public void removeObject(ITransaction transaction, String uri) {
         LOGGER.info("removeObject: {}", uri);
+        String resourceName = resourceNameFromResourcePath(uri);
+        if (resourceName.startsWith("._")) {
+            return;
+        }
         mAliyunDriveClientService.remove(uri);
     }
 
@@ -208,8 +232,14 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
     public StoredObject getStoredObject(ITransaction transaction, String uri) {
         StoredObject result = null;
         try {
+
             if ("/favicon.ico".equals(uri)) {
                 return result = null;
+            }
+            String resourceName = resourceNameFromResourcePath(uri);
+            if (resourceName.startsWith("._")) {
+                // OS-X uses these hidden files ...
+                return null;
             }
             AliyunDriveFileInfo tFile = mAliyunDriveClientService.getTFileByPath(uri);
             if (tFile != null) {
@@ -246,5 +276,10 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
                     "</form> ";
         }
         return "";
+    }
+
+    protected String resourceNameFromResourcePath( String path ) {
+        int ind = path.lastIndexOf('/');
+        return path.substring(ind + 1);
     }
 }

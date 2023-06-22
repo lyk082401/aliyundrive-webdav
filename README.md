@@ -147,18 +147,18 @@ implementation "com.squareup.okhttp3:logging-interceptor:3.12.13" //api19
 implementation "com.google.code.gson:gson:2.8.9"
 
 //主要
-implementation "net.xdow:aliyundrive-sdk-openapi:1.0.7"
-implementation "net.xdow:aliyundrive-sdk-webapi:1.0.7"
+implementation "net.xdow:aliyundrive-sdk-openapi:1.1.0"
+implementation "net.xdow:aliyundrive-sdk-webapi:1.1.0"
 
 //可选
-implementation "net.xdow:webdav:1.0.7"
-implementation "net.xdow:webdav-jakarta:1.0.7"
-implementation "net.xdow:webdav-javax:1.0.7"
-implementation "net.xdow:aliyundrive-webdav-internal:1.0.7"
-implementation "net.xdow:aliyundrive-android-core:1.0.7"
-implementation "net.xdow:jap-http:1.0.7"
-implementation "net.xdow:jap-http-jakarta-adapter:1.0.7"
-implementation "net.xdow:jap-http-javax-adapter:1.0.7"
+implementation "net.xdow:webdav:1.1.0"
+implementation "net.xdow:webdav-jakarta:1.1.0"
+implementation "net.xdow:webdav-javax:1.1.0"
+implementation "net.xdow:aliyundrive-webdav-internal:1.1.0"
+implementation "net.xdow:aliyundrive-android-core:1.1.0"
+implementation "net.xdow:jap-http:1.1.0"
+implementation "net.xdow:jap-http-jakarta-adapter:1.1.0"
+implementation "net.xdow:jap-http-javax-adapter:1.1.0"
 ```
 ## 基础用法
 ```java
@@ -185,7 +185,7 @@ AliyunDrive.newAliyunDrive()
 | 群辉Cloud Sync | 可用 | 可用 | 使用单向同步非常稳定 | 
 | Rclone | 可用 | 可用 | 推荐, 支持各个系统 |
 | Mac原生 | 可用 | 可用 | | 
-| Windows原生 | 可用 | 有点小问题 | 不建议, 适配有点问题, 上传报错 |
+| Windows原生 | 可用 | 可用 |  |
 | RaiDrive | 可用 | 可用 | Windows平台下建议用这个 |
 
 

@@ -1,5 +1,6 @@
 package net.sf.webdav.locking;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -417,4 +418,19 @@ public class LockedObject {
         return _lockDepth;
     }
 
+    @Override
+    public String toString() {
+        return "LockedObject{" +
+                "_resourceLocks=" + _resourceLocks +
+                ", _path='" + _path + '\'' +
+                ", _id='" + _id + '\'' +
+                ", _lockDepth=" + _lockDepth +
+                ", _expiresAt=" + _expiresAt +
+                ", _owner=" + Arrays.toString(_owner) +
+                ", _children=" + _children +
+                ", _parent=" + _parent +
+                ", _exclusive=" + _exclusive +
+                ", _type='" + _type + '\'' +
+                '}';
+    }
 }

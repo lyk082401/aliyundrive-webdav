@@ -2,6 +2,9 @@ logging:
   file:
     path: /var/log/
     name: webdav.log
+#    max-size: 200MB
+#  level:
+#    root: trace
 #  level:
 #    net:
 #      sf:
