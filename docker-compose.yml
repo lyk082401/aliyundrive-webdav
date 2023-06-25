@@ -13,5 +13,6 @@ services:
     tty: true
     environment:
       - TZ=Asia/Shanghai
+      - ALIYUNDRIVE_DOWNLOAD_PROXY_MODE=Auto
       - ALIYUNDRIVE_REFRESH_TOKEN=${REFRESH_TOKEN}
       - ALIYUNDRIVE_AUTH_PASSWORD=${AUTH_PASSWORD}

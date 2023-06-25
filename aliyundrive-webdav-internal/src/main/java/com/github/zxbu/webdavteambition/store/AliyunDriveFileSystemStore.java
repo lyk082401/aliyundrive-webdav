@@ -312,7 +312,7 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
                 return null;
             default:
                 String userAgent = transaction.getRequest().getHeader("User-Agent");
-                if (ClientIdentifyUtils.isMicrosoftExplorer(userAgent) || ClientIdentifyUtils.isWinSCP(userAgent)
+                if (ClientIdentifyUtils.isMicrosoftExplorer(userAgent) || ClientIdentifyUtils.isWinSCP5AndBelow(userAgent)
                         || ClientIdentifyUtils.isRclone(userAgent) || ClientIdentifyUtils.isSynoCloudSync(userAgent)
                         || ClientIdentifyUtils.isKodi19AndBelow(userAgent)) {
                     if (mode == AliyunDriveProperties.DownloadProxyMode.Direct) {

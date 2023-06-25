@@ -5,6 +5,10 @@ public class ClientIdentifyUtils {
     public static boolean isWinSCP(String userAgent) {
         return String.valueOf(userAgent).contains("WinSCP");
     }
+
+    public static boolean isWinSCP5AndBelow(String userAgent) {
+        return String.valueOf(userAgent).matches("WinSCP/[1-5]\\..+");
+    }
     public static boolean isMicrosoftExplorer(String userAgent) {
         return String.valueOf(userAgent).contains("Microsoft-WebDAV");
     }

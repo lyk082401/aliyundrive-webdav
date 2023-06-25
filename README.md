@@ -26,9 +26,7 @@
 - [浏览器获取refreshToken方式](#浏览器获取refreshtoken方式)
 - [功能说明](#功能说明)
   - [支持的功能](#支持的功能)
-  - [暂不支持的功能](#暂不支持的功能)
-  - [已知问题](#已知问题)
-  - [TODO](#todo)
+  - [注意事项](#注意事项)
 - [免责声明](#免责声明)
 
 # aliyundrive-webdav
@@ -75,6 +73,7 @@ docker run -d \
   -v $(pwd)/conf:/conf \
   -e TZ="Asia/Shanghai" \
   -e ALIYUNDRIVE_DRIVER=OpenApi \
+  -e ALIYUNDRIVE_DOWNLOAD_PROXY_MODE=Auto \
   -e ALIYUNDRIVE_REFRESH_TOKEN="your refreshToken" \
   -e ALIYUNDRIVE_AUTH_PASSWORD="admin" \
   eritpchy/aliyundrive-webdav
@@ -93,6 +92,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - ALIYUNDRIVE_DRIVER=OpenApi
+      - ALIYUNDRIVE_DOWNLOAD_PROXY_MODE=Auto
       - ALIYUNDRIVE_REFRESH_TOKEN=refreshToken
       - ALIYUNDRIVE_AUTH_USER_NAME=admin
       - ALIYUNDRIVE_AUTH_PASSWORD=admin
@@ -185,19 +185,19 @@ AliyunDrive.newAliyunDrive()
 ![imaage](./doc/img/openapi_login.gif)
 
 # 客户端兼容性
-| 客户端          |             下载 | 上传 |        备注        |
-|:-------------|---------------:| :----: |:----------------:|
-| 群辉Cloud Sync |             代理模式 | 可用 |     建议使用单向同步     | 
-| Rclone       |           代理模式 | 可用 |    推荐, 支持各个系统    |
-| Mac原生        |           :rocket:直连模式 | 可用 |                  | 
-| Transmit     |           :rocket:直连模式 | 可用 |                  | 
-| Windows原生    |           代理模式 | 可用 |                  |
-| RaiDrive     |             :rocket:直连模式 | 可用 | Windows平台下建议用这个  |
-| WinSCP       |           代理模式 | 可用 |                  |
-| nPlayer      |             :rocket:直连模式 | 可用 |        推荐        |
-| MT管理器        |             :rocket:直连模式 | 可用 |        推荐        |
-| ES文件浏览器      |             :rocket:直连模式 | 可用 |                  |
-| Kodi 20.0+   |             :rocket:直连模式 | 可用 | 2023年后编译版本可用直连模式 |
+| 客户端           |             下载 | 上传 |        备注        |
+|:--------------|---------------:| :----: |:----------------:|
+| 群辉Cloud Sync  |             代理模式 | :white_check_mark: |     建议使用单向同步     | 
+| Rclone        |           代理模式 | :white_check_mark: |    推荐, 支持各个系统    |
+| Mac原生         |           :rocket:直连模式 | :white_check_mark: |                  | 
+| Transmit      |           :rocket:直连模式 | :white_check_mark: |                  | 
+| Windows原生     |           代理模式 | :white_check_mark: |                  |
+| RaiDrive      |             :rocket:直连模式 | :white_check_mark: | Windows平台下建议用这个  |
+| WinSCP 6.1.1+ |           :rocket:直连模式 | :white_check_mark: | 6.1.1以下版本不支持直连模式 |
+| nPlayer       |             :rocket:直连模式 | :white_check_mark: |        推荐        |
+| MT管理器         |             :rocket:直连模式 | :white_check_mark: |        推荐        |
+| ES文件浏览器       |             :rocket:直连模式 | :white_check_mark: |                  |
+| Kodi 20.0+    |             :rocket:直连模式 | :white_check_mark: | 2023年后编译版本可用直连模式 |
 
 注: 所有客户端均默认支持代理模式
 
@@ -250,10 +250,11 @@ javascript:var p=document.createElement('p');p.style='text-align:center;margin-t
 11. 支持文件名包含 `/` 字符
 12. 数据校验
 
-## 暂不支持的功能
+## 注意事项
 1. 移动文件到其他目录的同时, 修改文件名。比如 /a.zip 移动到 /b/a1.zip, 是不支持的
 2. 文件上传断点续传
 3. 部分客户端兼容性不好
+4. 由于http协议在公网上明文传输密码, 部署在公网切记要开https, 否则不安全, 用宝塔反代即可
 
 # 免责声明
 1. 本软件为免费开源项目, 无任何形式的盈利行为。
