@@ -2,6 +2,7 @@ package com.github.zxbu.webdavteambition.store;
 
 import com.fujieid.jap.http.JapHttpRequest;
 import com.fujieid.jap.http.JapHttpResponse;
+import com.github.zxbu.webdavteambition.config.AliyunDriveProperties;
 import com.github.zxbu.webdavteambition.model.PathInfo;
 import com.google.common.net.HttpHeaders;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -10,6 +11,7 @@ import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
 import net.sf.webdav.Transaction;
 import net.sf.webdav.exceptions.WebdavException;
+import net.sf.webdav.util.ClientIdentifyUtils;
 import net.xdow.aliyundrive.bean.AliyunDriveEnum;
 import net.xdow.aliyundrive.bean.AliyunDriveFileInfo;
 import net.xdow.aliyundrive.exception.NotAuthenticatedException;
@@ -300,6 +302,27 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
                     "</form> ";
         }
         return "";
+    }
+
+    @Override
+    public String getResourceDownloadUrlForRedirection(ITransaction transaction, String path) {
+        AliyunDriveProperties.DownloadProxyMode mode = this.mAliyunDriveClientService.getProperties().getDownloadProxyMode();
+        switch (mode) {
+            case Proxy:
+                return null;
+            default:
+                String userAgent = transaction.getRequest().getHeader("User-Agent");
+                if (ClientIdentifyUtils.isMicrosoftExplorer(userAgent) || ClientIdentifyUtils.isWinSCP(userAgent)
+                        || ClientIdentifyUtils.isRclone(userAgent) || ClientIdentifyUtils.isSynoCloudSync(userAgent)) {
+                    if (mode == AliyunDriveProperties.DownloadProxyMode.Direct) {
+                        throw new WebdavException("DirectModeUnsupportedCode",
+                            "This client is not support Direct mode, please consider switch to Proxy mode, or Auto mode.");
+                    } else {
+                        return null;
+                    }
+                }
+                return this.mAliyunDriveClientService.getDownloadUrlByPath(path);
+        }
     }
 
     protected String resourceNameFromResourcePath( String path ) {

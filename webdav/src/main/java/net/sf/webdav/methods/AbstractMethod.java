@@ -557,24 +557,4 @@ public abstract class AbstractMethod implements IMethodExecutor {
         }
     }
 
-    protected static boolean isWinSCP(String userAgent) {
-        return String.valueOf(userAgent).contains("WinSCP");
-    }
-    protected static boolean isMicrosoftExplorer(String userAgent) {
-        return String.valueOf(userAgent).contains("Microsoft-WebDAV");
-    }
-    protected static boolean isOSXFinder(String userAgent) {
-        userAgent = String.valueOf(userAgent);
-        return userAgent.contains("WebDAVFS") && !isTransmit(userAgent);
-    }
-
-    protected static boolean isTransmit(String userAgent) {
-        userAgent = String.valueOf(userAgent);
-        return userAgent.contains("Transmit");
-    }
-
-    protected static boolean isRclone(String userAgent) {
-        userAgent = String.valueOf(userAgent);
-        return userAgent.contains("rclone");
-    }
 }

@@ -130,10 +130,13 @@ sudo kubectl apply -f k8s_app.yaml
 --aliyundrive.auth.password=admin
     WebDav密码, 默认admin
 --aliyundrive.work-dir=./conf
-    token挂载路径 (如果多开的话, 需修改此配置)
+    token挂载路径, 如果在同一个路径多开, 需修改此配置
 --aliyundrive.driver=OpenApi
     驱动引擎, 默认官方OpenApi, 可选WebApi
-
+--aliyundrive.download-proxy-mode=Auto
+    文件下载模式, 默认Auto, 自动模式, 默认直连模式, 客户端不支持直连模式时使用代理模式
+    可选Direct, 强制直连模式, 使用此模式, 一些客户端不兼容, 将会直接报错400,302,403,'文件大小超出允许的限制'等错误, 详见 '客户端兼容性'
+    可选Proxy, 代理模式, 文件下载由程序中转, 3.3.0以前版本默认模式, 如遇问题或报上述错误可尝试使用Proxy模式
     
 ```
 
@@ -180,14 +183,19 @@ AliyunDrive.newAliyunDrive()
 ![imaage](./doc/img/openapi_login.gif)
 
 # 客户端兼容性
-| 客户端          | 下载 | 上传 | 备注 |
-|:-------------| ----: | :----: | :----: |
-| 群辉Cloud Sync | 可用 | 可用 | 使用单向同步非常稳定 | 
-| Rclone       | 可用 | 可用 | 推荐, 支持各个系统 |
-| Mac原生        | 可用 | 可用 | | 
-| Windows原生    | 可用 | 可用 |  |
-| RaiDrive     | 可用 | 可用 | Windows平台下建议用这个 |
-| WinSCP       | 可用 | 可用 |  |
+| 客户端          |             下载 | 上传 |       备注        |
+|:-------------|---------------:| :----: |:---------------:|
+| 群辉Cloud Sync |             代理模式 | 可用 |    建议使用单向同步     | 
+| Rclone       |           代理模式 | 可用 |   推荐, 支持各个系统    |
+| Mac原生        |           :rocket:直连模式 | 可用 |                 | 
+| Transmit     |           :rocket:直连模式 | 可用 |                 | 
+| Windows原生    |           代理模式 | 可用 |                 |
+| RaiDrive     |             :rocket:直连模式 | 可用 | Windows平台下建议用这个 |
+| WinSCP       |           代理模式 | 可用 |                 |
+| nPlayer      |             :rocket:直连模式 | 可用 |       推荐        |
+| MT管理器        |             :rocket:直连模式 | 可用 |       推荐        |
+| ES文件浏览器      |             :rocket:直连模式 | 可用 |                 |
+注: 所有客户端均默认支持代理模式
 
 ## Rclone 配置说明
 - Rclone 1.62.2及以下版本应选择Vendor为Nextcloud以支持rclone自身的数据校验功能

@@ -27,6 +27,7 @@ import net.sf.webdav.exceptions.LockFailedException;
 import net.sf.webdav.exceptions.WebdavException;
 import net.sf.webdav.locking.IResourceLocks;
 import net.sf.webdav.locking.LockedObject;
+import net.sf.webdav.util.ClientIdentifyUtils;
 
 import java.io.IOException;
 import java.util.Hashtable;
@@ -61,14 +62,14 @@ public class DoPut extends AbstractMethod {
 
             _userAgent = req.getHeader("User-Agent");
 
-            if (isOSXFinder(_userAgent) && req.getContentLength() == 0) {
+            if (ClientIdentifyUtils.isOSXFinder(_userAgent) && req.getContentLength() == 0) {
                 // OS X Finder sends 2 PUTs; first has 0 content, second has content.
                 // This is the first one, so we'll ignore it ...
                 LOG.trace("-- First of multiple OS-X Finder PUT calls at {0}", path);
             }
 
             Hashtable<String, Integer> errorList = new Hashtable<>();
-            if (isOSXFinder(_userAgent)) {
+            if (ClientIdentifyUtils.isOSXFinder(_userAgent)) {
                 // OS X Finder sends 2 PUTs; first has 0 content, second has content.
                 // This is the second one that was preceded by a LOCK, so don't need to check the locks ...
             } else {
@@ -205,7 +206,7 @@ public class DoPut extends AbstractMethod {
      *
      */
     private void doUserAgentWorkaround(JapHttpResponse resp) {
-        if (isOSXFinder(_userAgent)) {
+        if (ClientIdentifyUtils.isOSXFinder(_userAgent)) {
             LOG.trace("DoPut.execute() : do workaround for user agent '"
                     + _userAgent + "'");
             resp.setStatus(WebdavStatus.SC_CREATED);

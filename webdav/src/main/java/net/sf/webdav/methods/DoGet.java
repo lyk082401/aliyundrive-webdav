@@ -54,6 +54,12 @@ public class DoGet extends DoHead {
                 resp.sendError(WebdavStatus.SC_METHOD_NOT_ALLOWED);
                 return;
             }
+
+            String downloadUrl = _store.getResourceDownloadUrlForRedirection(transaction, path);
+            if (downloadUrl != null && downloadUrl.length() > 0) {
+                resp.sendRedirect(downloadUrl);
+                return;
+            }
             OutputStream out = resp.getOutputStream();
             BufferedOutputStream bos = new BufferedOutputStream(out, 64 * 1024);
             InputStream in = _store.getResourceContent(transaction, path);
@@ -79,6 +85,12 @@ public class DoGet extends DoHead {
         } catch (EOFException ignore) {
         } catch (Exception e) {
             String message = e.toString();
+            if (message.contains("DirectModeUnsupportedCode")) {
+                try {
+                    resp.sendError(JapHttpResponse.SC_BAD_REQUEST, message);
+                } catch (Exception ignored) {
+                }
+            }
             if (!message.contains("Connection reset by peer")
                     && !message.contains("Broken pipe")
                     && !message.contains("Closed")

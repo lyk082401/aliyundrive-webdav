@@ -536,6 +536,19 @@ public class AliyunDriveClientService<T extends IAliyunDrive> implements IAliyun
         }
     }
 
+   @Nullable
+   public String getDownloadUrlByPath(String path) {
+        AliyunDriveFileInfo file = getTFileByPath(path);
+        if (file == null) {
+            return null;
+        }
+        AliyunDriveResponse.FileGetDownloadUrlInfo res = fileGetDownloadUrlInfo(file.getFileId());
+        if (res.isError()) {
+            throw new WebdavException(new WebdavException(res.getCode(), res.getMessage()));
+        }
+        return res.getUrl();
+    }
+
     private synchronized AliyunDriveResponse.FileGetDownloadUrlInfo fileGetDownloadUrlInfo(String fileId) {
         AliyunDriveResponse.FileGetDownloadUrlInfo res;
         try {

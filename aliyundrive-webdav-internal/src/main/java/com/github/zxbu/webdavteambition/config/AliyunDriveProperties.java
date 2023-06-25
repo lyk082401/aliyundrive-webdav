@@ -36,10 +36,16 @@ public class AliyunDriveProperties {
 
     private transient Auth auth = new Auth();
     private transient Driver driver = Driver.OpenApi;
+    private transient DownloadProxyMode downloadProxyMode = DownloadProxyMode.Direct;
 
     public enum Driver {
         OpenApi, WebApi
     }
+
+    public enum DownloadProxyMode {
+        Auto, Direct, Proxy
+    }
+
     public void save() {
         String json = JsonUtils.toJsonPretty(this);
         File metaFile = new File(workDir, getMetaFileName());

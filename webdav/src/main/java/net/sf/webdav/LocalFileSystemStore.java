@@ -233,4 +233,9 @@ public class LocalFileSystemStore implements IWebdavStore {
     public String getFooter(ITransaction transaction) {
         return "";
     }
+
+    @Override
+    public String getResourceDownloadUrlForRedirection(ITransaction transaction, String path) {
+        return null;
+    }
 }

@@ -17,6 +17,7 @@ public class AliyunDrivePropertiesSpring extends AliyunDriveProperties implement
         AliyunDriveProperties other = load(getWorkDir());
         other.setWorkDir(getWorkDir());
         other.setDriver(getDriver());
+        other.setDownloadProxyMode(getDownloadProxyMode());
         BeanUtils.copyProperties(other, this);
         this.setAuth(auth);
         this.setAuthorization(null);

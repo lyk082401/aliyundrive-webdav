@@ -225,4 +225,6 @@ public interface IWebdavStore {
     long getQuotaUsedBytes(ITransaction transaction);
 
     String getFooter(ITransaction transaction);
+
+    String getResourceDownloadUrlForRedirection(ITransaction transaction, String path);
 }
