@@ -36,6 +36,8 @@ public class DoDelete extends AbstractMethod {
     private ResourceLocks _resourceLocks;
     private boolean _readOnly;
 
+    private static final boolean RECURSE_DELETE = false;
+
     public DoDelete(IWebdavStore store, ResourceLocks resourceLocks,
             boolean readOnly) {
         _store = store;
@@ -117,28 +119,28 @@ public class DoDelete extends AbstractMethod {
 
         resp.setStatus(WebdavStatus.SC_NO_CONTENT);
 
-        if (!_readOnly) {
-
-            StoredObject so = _store.getStoredObject(transaction, path);
-            if (so != null) {
-
-                if (so.isResource()) {
+        if (_readOnly) {
+            resp.sendError(WebdavStatus.SC_FORBIDDEN);
+            return;
+        }
+        StoredObject so = _store.getStoredObject(transaction, path);
+        if (so == null) {
+            //已删除
+            return;
+        }
+        if (!RECURSE_DELETE) {
+            _store.removeObject(transaction, path);
+        } else {
+            if (so.isResource()) {
+                _store.removeObject(transaction, path);
+            } else {
+                if (so.isFolder()) {
+                    deleteFolder(transaction, path, errorList, req, resp);
                     _store.removeObject(transaction, path);
                 } else {
-                    if (so.isFolder()) {
-                        deleteFolder(transaction, path, errorList, req, resp);
-                        _store.removeObject(transaction, path);
-                    } else {
-                        resp.sendError(WebdavStatus.SC_NOT_FOUND);
-                    }
+                    resp.sendError(WebdavStatus.SC_NOT_FOUND);
                 }
-            } else {
-                resp.sendError(WebdavStatus.SC_NOT_FOUND);
             }
-            so = null;
-
-        } else {
-            resp.sendError(WebdavStatus.SC_FORBIDDEN);
         }
     }
 
