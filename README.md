@@ -7,6 +7,8 @@
 
 > 3.x版本支持阿里云盘OpenApi
 
+> 3.4.0及以上版本默认支持直连模式下载
+
 目录
 - [aliyundrive-webdav](#aliyundrive-webdav)
 - [如何使用](#如何使用)
@@ -204,13 +206,17 @@ AliyunDrive.newAliyunDrive()
 - Vendor 选择为Other无数据校验功能
 - Vendor 选择为Owncloud, 因Rclone本身只校验md5无数据校验功能
 
-# 浏览器获取refreshToken方式(仅WebApi需要)
-### 方式1
+## 浏览器获取refreshToken方式(仅WebApi需要)
+<details>
+  <summary>方式1</summary>
 1. 先通过浏览器（建议chrome）打开阿里云盘官网并登录：https://www.aliyundrive.com/drive/
 2. 登录成功后, 按F12打开开发者工具, 点击Application, 点击Local Storage, 点击 Local Storage下的 [https://www.aliyundrive.com/](https://www.aliyundrive.com/), 点击右边的token, 此时可以看到里面的数据, 其中就有refresh_token, 把其值复制出来即可。（格式为小写字母和数字, 不要复制双引号。例子：ca6bf2175d73as2188efg81f87e55f11）
 3. 第二步有点繁琐, 大家结合下面的截图就看懂了
    ![image](https://user-images.githubusercontent.com/32785355/119246278-e6760880-bbb2-11eb-877c-aca16cf75d89.png)
-### 方式2
+</details>
+<details>
+  <summary>方式2</summary>
+  
 1. 先通过浏览器（建议chrome）打开阿里云盘官网并登录：https://www.aliyundrive.com/drive/
 2. 登录成功后, 在地址栏输入 javascript:
    ![imgage](./doc/img/step1.jpg)
@@ -226,6 +232,7 @@ var p=document.createElement('p');p.style='text-align:center;margin-top:30px';p.
 javascript:var p=document.createElement('p');p.style='text-align:center;margin-top:30px';p.innerHTML='refresh_token: <span style="color:red;">'+JSON.parse(localStorage.getItem('token')).refresh_token+'</span>';var win=window.open('','_blank','width=800,height=100');win.document.body.appendChild(p);
 ```
 添加为浏览器书签, 在https://www.aliyundrive.com/drive/ 页面点击该书签也会弹出refresh_token弹窗
+</details>
 
 # 功能说明
 ## 支持的功能
