@@ -36,7 +36,7 @@ public class AliyunDriveProperties {
 
     private transient Auth auth = new Auth();
     private transient Driver driver = Driver.OpenApi;
-    private transient DownloadProxyMode downloadProxyMode = DownloadProxyMode.Direct;
+    private transient DownloadProxyMode downloadProxyMode = DownloadProxyMode.Auto;
 
     public enum Driver {
         OpenApi, WebApi
