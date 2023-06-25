@@ -313,8 +313,7 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
             default:
                 String userAgent = transaction.getRequest().getHeader("User-Agent");
                 if (ClientIdentifyUtils.isMicrosoftExplorer(userAgent) || ClientIdentifyUtils.isWinSCP5AndBelow(userAgent)
-                        || ClientIdentifyUtils.isRclone(userAgent) || ClientIdentifyUtils.isSynoCloudSync(userAgent)
-                        || ClientIdentifyUtils.isKodi19AndBelow(userAgent)) {
+                        || ClientIdentifyUtils.isSynoCloudSync(userAgent) || ClientIdentifyUtils.isKodi19AndBelow(userAgent)) {
                     if (mode == AliyunDriveProperties.DownloadProxyMode.Direct) {
                         throw new WebdavException("DirectModeUnsupportedCode",
                             "This client is not support Direct mode, please consider switch to Proxy mode, or Auto mode.");

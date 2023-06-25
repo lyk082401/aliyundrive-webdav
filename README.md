@@ -185,19 +185,19 @@ AliyunDrive.newAliyunDrive()
 ![imaage](./doc/img/openapi_login.gif)
 
 # 客户端兼容性
-| 客户端           |             下载 | 上传 |        备注        |
-|:--------------|---------------:| :----: |:----------------:|
-| 群辉Cloud Sync  |             代理模式 | :white_check_mark: |     建议使用单向同步     | 
-| Rclone        |           代理模式 | :white_check_mark: |    推荐, 支持各个系统    |
-| Mac原生         |           :rocket:直连模式 | :white_check_mark: |                  | 
-| Transmit      |           :rocket:直连模式 | :white_check_mark: |                  | 
-| Windows原生     |           代理模式 | :white_check_mark: |                  |
-| RaiDrive      |             :rocket:直连模式 | :white_check_mark: | Windows平台下建议用这个  |
-| WinSCP 6.1.1+ |           :rocket:直连模式 | :white_check_mark: | 6.1.1以下版本不支持直连模式 |
-| nPlayer       |             :rocket:直连模式 | :white_check_mark: |        推荐        |
-| MT管理器         |             :rocket:直连模式 | :white_check_mark: |        推荐        |
-| ES文件浏览器       |             :rocket:直连模式 | :white_check_mark: |                  |
-| Kodi 20.0+    |             :rocket:直连模式 | :white_check_mark: | 2023年后编译版本可用直连模式 |
+| 客户端           |           下载 | 上传 |                            备注                            |
+|:--------------|-------------:| :----: |:--------------------------------------------------------:|
+| 群辉Cloud Sync  |         代理模式 | :white_check_mark: |                         建议使用单向同步                         | 
+| Rclone        | :rocket:直连模式 | :white_check_mark: |  推荐, 支持各个系统, 直连模式需要添加参数, 见下方[Rclone 配置说明](#Rclone 配置说明)  |
+| Mac原生         | :rocket:直连模式 | :white_check_mark: |                                                          | 
+| Transmit      | :rocket:直连模式 | :white_check_mark: |                                                          | 
+| Windows原生     |         代理模式 | :white_check_mark: |                                                          |
+| RaiDrive      | :rocket:直连模式 | :white_check_mark: |                     Windows平台下建议用这个                      |
+| WinSCP 6.1.1+ | :rocket:直连模式 | :white_check_mark: |                     6.1.1以下版本不支持直连模式                     |
+| nPlayer       | :rocket:直连模式 | :white_check_mark: |                            推荐                            |
+| MT管理器         | :rocket:直连模式 | :white_check_mark: |                            推荐                            |
+| ES文件浏览器       | :rocket:直连模式 | :white_check_mark: |                                                          |
+| Kodi 20.0+    | :rocket:直连模式 | :white_check_mark: |                     2023年后编译版本可用直连模式                     |
 
 注: 所有客户端均默认支持代理模式
 
@@ -206,6 +206,10 @@ AliyunDrive.newAliyunDrive()
 - Rclone 1.63.0及以上版本(目前为beta版本, [点击前往下载beta版](https://beta.rclone.org/)) 请选择Vendor为Fastmail Files, 如选择Vendor为Nextcloud, 则advanced config中nextcloud_chunk_size应设置为0, 否则使用时报错
 - Vendor 选择为Other无数据校验功能
 - Vendor 选择为Owncloud, 因Rclone本身只校验md5无数据校验功能
+- 直连模式需要在Rclone 命令行参数添加 --header="Referer:", 否则报错403
+```shell
+例如: R:\rclone1.63.0.exe --header="Referer:" copy test:/demo/demo.mkv R:/test
+```
 
 ## 浏览器获取refreshToken方式(仅WebApi需要)
 <details>
