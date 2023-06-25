@@ -94,7 +94,7 @@ public class DoProppatch extends AbstractMethod {
                 }
 
                 String[] lockTokens = getLockIdFromIfHeader(req);
-                boolean lockTokenMatchesIfHeader = (lockTokens != null && lockTokens[0].equals(lo.getID()));
+                boolean lockTokenMatchesIfHeader = (lockTokens != null && lo != null && lockTokens[0].equals(lo.getID()));
                 if (lo != null && lo.isExclusive() && !lockTokenMatchesIfHeader) {
                     // Object on specified path is LOCKED
                     errorList = new Hashtable<String, Integer>();
