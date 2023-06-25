@@ -26,10 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class AliyunDriveFileSystemStore implements IWebdavStore {
 
@@ -138,7 +135,21 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
                 contentLength = Long.parseLong(StringUtils.defaultIfEmpty(request.getHeader("X-Expected-Entity-Length"), "-1"));
             }
         }
-        mAliyunDriveClientService.uploadPre(resourceUri, contentLength, content, response);
+        if (LOGGER.isTraceEnabled()) {
+            Enumeration<String> headerNames = request.getHeaderNames();
+            while (headerNames.hasMoreElements()) {
+                String key = headerNames.nextElement();
+                LOGGER.trace("header key: {} value: {}", key, request.getHeader(key));
+            }
+        }
+        String sha1Sum = StringUtils.defaultIfEmpty(request.getHeader("oc-checksum"), "").toLowerCase();
+        sha1Sum = sha1Sum.startsWith("sha1:") ? sha1Sum.toLowerCase().replace("sha1:", "") : null;
+        long modifyTimeSec = Long.parseLong(StringUtils.defaultIfEmpty(request.getHeader("x-oc-mtime"), "-1"));
+        if (modifyTimeSec != -1) {
+            response.setHeader("X-OC-MTime", "accepted");
+        }
+
+        mAliyunDriveClientService.uploadPre(resourceUri, contentLength, content, sha1Sum, modifyTimeSec, response);
 
         if (contentLength == 0) {
             String expect = request.getHeader("Expect");
@@ -159,8 +170,13 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
 
     @Override
     public String[] getChildrenNames(ITransaction transaction, String folderUri) {
-        LOGGER.info("getChildrenNames: {}", folderUri);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("getChildrenNames: {}", folderUri);
+        }
         AliyunDriveFileInfo tFile = this.mAliyunDriveClientService.getTFileByPath(folderUri);
+        if (tFile == null) {
+            return new String[0];
+        }
         if (tFile.getType() == AliyunDriveEnum.Type.File) {
             return new String[0];
         }
@@ -186,16 +202,21 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
         return getResourceLength2(transaction, path);
     }
 
+    private long getResourceLength2(AliyunDriveFileInfo tFile) {
+        if (tFile == null || tFile.getSize() == null) {
+            return 384;
+        }
+        return tFile.getSize();
+    }
     private long getResourceLength2(ITransaction transaction, String path) {
         long size = 0;
         try {
             AliyunDriveFileInfo tFile = mAliyunDriveClientService.getTFileByPath(path);
-            if (tFile == null || tFile.getSize() == null) {
-                return size = 384;
-            }
-            return size = tFile.getSize();
+            return size = getResourceLength2(tFile);
         } finally {
-            LOGGER.info("getResourceLength: {} size: {}", path, size);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("getResourceLength: {} size: {}", path, size);
+            }
         }
     }
 
@@ -206,7 +227,7 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
         if (resourceName.startsWith("._")) {
             return;
         }
-        mAliyunDriveClientService.remove(uri);
+        mAliyunDriveClientService.removeByPath(uri);
     }
 
     @Override
@@ -245,14 +266,17 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
             if (tFile != null) {
                 StoredObject so = new StoredObject();
                 so.setFolder(tFile.getType() == AliyunDriveEnum.Type.Folder);
-                so.setResourceLength(getResourceLength2(transaction, uri));
-                so.setCreationDate(tFile.getCreatedAt());
-                so.setLastModified(tFile.getUpdatedAt());
+                so.setResourceLength(getResourceLength2(tFile));
+                Date localCreatedTime = tFile.getLocalCreatedAt();
+                so.setCreationDate(localCreatedTime != null ? localCreatedTime : tFile.getCreatedAt());
+                Date localModifyTime = tFile.getLocalModifiedAt();
+                so.setLastModified(localModifyTime != null ? localModifyTime : tFile.getUpdatedAt());
+                so.setSha1sum(tFile.getContentHash());
                 return result = so;
             }
             return result = null;
         } finally {
-            LOGGER.info("getStoredObject: {} result: {}", uri, JsonUtils.toJson(result));
+            LOGGER.debug("getStoredObject: {} result: {}", uri, JsonUtils.toJson(result));
         }
     }
 

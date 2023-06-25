@@ -29,22 +29,18 @@ import net.sf.webdav.fromcatalina.URLEncoder;
 import net.sf.webdav.fromcatalina.XMLWriter;
 import net.sf.webdav.locking.IResourceLocks;
 import net.sf.webdav.locking.LockedObject;
+import net.sf.webdav.util.DateTimeUtils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.Writer;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public abstract class AbstractMethod implements IMethodExecutor {
 
-    private static final ThreadLocal<DateFormat> thLastmodifiedDateFormat = new ThreadLocal<>();
-    private static final ThreadLocal<DateFormat> thCreationDateFormat = new ThreadLocal<>();
-    private static final ThreadLocal<DateFormat> thLocalDateFormat = new ThreadLocal<>();
-    
     /**
      * Array containing the safe characters set.
      */
@@ -61,13 +57,15 @@ public abstract class AbstractMethod implements IMethodExecutor {
      */
     protected static final String CREATION_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
+    protected static final SimpleDateFormat CREATION_DATE_FORMAT_GMT_SDF = new SimpleDateFormat(CREATION_DATE_FORMAT);
+
     /**
      * Simple date format for the last modified date. (RFC 822 updated by RFC
      * 1123)
      */
     protected static final String LAST_MODIFIED_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
-    
-    protected static final String LOCAL_DATE_FORMAT = "dd/MM/yy' 'HH:mm:ss";
+
+    protected static final SimpleDateFormat LAST_MODIFIED_DATE_FORMAT_GMT_SDF = new SimpleDateFormat(LAST_MODIFIED_DATE_FORMAT, Locale.US);
 
     static {
         /**
@@ -79,6 +77,8 @@ public abstract class AbstractMethod implements IMethodExecutor {
         URL_ENCODER.addSafeCharacter('.');
         URL_ENCODER.addSafeCharacter('*');
         URL_ENCODER.addSafeCharacter('/');
+        CREATION_DATE_FORMAT_GMT_SDF.setTimeZone(TimeZone.getTimeZone("GMT"));
+        LAST_MODIFIED_DATE_FORMAT_GMT_SDF.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
     /**
@@ -106,35 +106,26 @@ public abstract class AbstractMethod implements IMethodExecutor {
      */
     protected static final int TEMP_TIMEOUT = 10;
 
-    
-    public static String lastModifiedDateFormat(final Date date) {
-        DateFormat df = thLastmodifiedDateFormat.get();
-        if( df == null ) {
-            df = new SimpleDateFormat(LAST_MODIFIED_DATE_FORMAT, Locale.US);
-            df.setTimeZone(TimeZone.getTimeZone("GMT"));
-            thLastmodifiedDateFormat.set( df );
-        }
-        return df.format(date);
+
+    /**
+     * 应当返回GMT时间
+     * @param userAgent
+     * @param date
+     * @return
+     */
+    public static String lastModifiedDateFormat(String userAgent, final Date date) {
+        return LAST_MODIFIED_DATE_FORMAT_GMT_SDF.format(DateTimeUtils.convertGMTDateToLocal(date));
     }
 
-    public static String creationDateFormat(final Date date) {
-        DateFormat df = thCreationDateFormat.get();
-        if( df == null ) {
-            df = new SimpleDateFormat(CREATION_DATE_FORMAT);
-            df.setTimeZone(TimeZone.getTimeZone("GMT"));
-            thCreationDateFormat.set( df );
-        }
-        return df.format(date);
+    /**
+     * 应当返回GMT时间
+     * @param userAgent
+     * @param date
+     * @return
+     */
+    public static String creationDateFormat(String userAgent, final Date date) {
+        return CREATION_DATE_FORMAT_GMT_SDF.format(DateTimeUtils.convertGMTDateToLocal(date));
     }
-
-    public static String getLocalDateFormat(final Date date, final Locale loc) {
-        DateFormat df = thLocalDateFormat.get();
-        if( df == null ) {
-            df = new SimpleDateFormat(LOCAL_DATE_FORMAT, loc);
-        }
-        return df.format(date);
-    }
-
 
     /**
      * Parses and normalizes the destination header.
@@ -566,4 +557,24 @@ public abstract class AbstractMethod implements IMethodExecutor {
         }
     }
 
+    protected static boolean isWinSCP(String userAgent) {
+        return String.valueOf(userAgent).contains("WinSCP");
+    }
+    protected static boolean isMicrosoftExplorer(String userAgent) {
+        return String.valueOf(userAgent).contains("Microsoft-WebDAV");
+    }
+    protected static boolean isOSXFinder(String userAgent) {
+        userAgent = String.valueOf(userAgent);
+        return userAgent.contains("WebDAVFS") && !isTransmit(userAgent);
+    }
+
+    protected static boolean isTransmit(String userAgent) {
+        userAgent = String.valueOf(userAgent);
+        return userAgent.contains("Transmit");
+    }
+
+    protected static boolean isRclone(String userAgent) {
+        userAgent = String.valueOf(userAgent);
+        return userAgent.contains("rclone");
+    }
 }

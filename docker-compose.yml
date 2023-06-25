@@ -5,6 +5,7 @@ services:
     container_name: aliyundrive-webdav
     restart: always
     volumes:
+      - /dev/null:/webdav.log
       - /etc/localtime:/etc/localtime
       - ./conf:/conf
     ports:

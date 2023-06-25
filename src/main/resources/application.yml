@@ -3,8 +3,9 @@ logging:
     path: /var/log/
     name: webdav.log
 #    max-size: 200MB
-#  level:
-#    root: trace
+  level:
+    okhttp3: warn
+    root: info
 #  level:
 #    net:
 #      sf:

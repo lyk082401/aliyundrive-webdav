@@ -14,7 +14,6 @@ public class AliyunDriveFileInfo extends AliyunDriveResponse.GenericMessageInfo 
     private Long size;
     //fileList Api默认不取回
     private String fileExtension;
-    //fileList Api默认不取回
     private String contentHash;
     //fileList Api默认不取回
     private AliyunDriveEnum.Category category;
@@ -28,6 +27,8 @@ public class AliyunDriveFileInfo extends AliyunDriveResponse.GenericMessageInfo 
     private String downloadUrl;
     private Date createdAt;
     private Date updatedAt;
+    private Date localCreatedAt;
+    private Date localModifiedAt;
 
     /**
      * WebApi Only

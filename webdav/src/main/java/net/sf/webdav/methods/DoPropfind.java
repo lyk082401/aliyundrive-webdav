@@ -70,6 +70,10 @@ public class DoPropfind extends AbstractMethod {
 
     private int _depth;
 
+    private static final String NAMESPACE_APPLE_WEBDAVFS = "http://www.apple.com/webdav_fs/props/";
+    private static final String NAMESPACE_NEXTCLOUD = "http://nextcloud.org/ns";
+    private static final String NAMESPACE_OWNCLOUD = "http://owncloud.org/ns";
+
     public DoPropfind(IWebdavStore store, ResourceLocks resLocks,
                       IMimeTyper mimeTyper) {
         _store = store;
@@ -134,7 +138,9 @@ public class DoPropfind extends AbstractMethod {
                 }
 
                 HashMap<String, String> namespaces = new HashMap<>();
-                namespaces.put("http://www.apple.com/webdav_fs/props/", "S");
+                namespaces.put(NAMESPACE_APPLE_WEBDAVFS, "S");
+                namespaces.put(NAMESPACE_OWNCLOUD, "oc");
+                namespaces.put(NAMESPACE_NEXTCLOUD, "ns");
                 namespaces.put("DAV:", "D");
 
                 if (propertyFindType == FIND_BY_PROPERTY) {
@@ -236,8 +242,10 @@ public class DoPropfind extends AbstractMethod {
         StoredObject so = _store.getStoredObject(transaction, path);
         if (so == null) return;
         boolean isFolder = so.isFolder();
-        final String creationdate = creationDateFormat(so.getCreationDate());
-        final String lastModified = lastModifiedDateFormat(so.getLastModified());
+        String userAgent = transaction.getRequest().getHeader("User-Agent");
+        final String creationDateString = creationDateFormat(userAgent, so.getCreationDate());
+        final String lastModifiedDateString = lastModifiedDateFormat(userAgent, so.getLastModified());
+        String sha1Sum = so.getSha1sum();
         String resourceLength = String.valueOf(so.getResourceLength());
 
         // ResourceInfo resourceInfo = new ResourceInfo(path, resources);
@@ -280,12 +288,12 @@ public class DoPropfind extends AbstractMethod {
                 generatedXML.writeElement("DAV::propstat", XMLWriter.OPENING);
                 generatedXML.writeElement("DAV::prop", XMLWriter.OPENING);
 
-                generatedXML.writeProperty("DAV::creationdate", creationdate);
+                generatedXML.writeProperty("DAV::creationdate", creationDateString);
                 generatedXML.writeElement("DAV::displayname", XMLWriter.OPENING);
                 generatedXML.writeData(resourceName);
                 generatedXML.writeElement("DAV::displayname", XMLWriter.CLOSING);
                 if (!isFolder) {
-                    generatedXML.writeProperty("DAV::getlastmodified", lastModified);
+                    generatedXML.writeProperty("DAV::getlastmodified", lastModifiedDateString);
                     generatedXML.writeProperty("DAV::getcontentlength", resourceLength);
                     String contentType = mimeType;
                     if (contentType != null && !contentType.isEmpty()) {
@@ -297,14 +305,23 @@ public class DoPropfind extends AbstractMethod {
                     generatedXML.writeElement("DAV::resourcetype", XMLWriter.OPENING);
                     generatedXML.writeElement("DAV::collection", XMLWriter.NO_CONTENT);
                     generatedXML.writeElement("DAV::resourcetype", XMLWriter.CLOSING);
-                    generatedXML.writeProperty("DAV::getlastmodified", lastModified);
+                    generatedXML.writeProperty("DAV::getlastmodified", lastModifiedDateString);
                 }
 
                 writeSupportedLockElements(transaction, generatedXML, path);
                 writeLockDiscoveryElements(transaction, generatedXML, path);
 
                 generatedXML.writeProperty("DAV::source", "");
-                generatedXML.writeProperty("http://www.apple.com/webdav_fs/props/:appledoubleheader", "AAUWBwACAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAACAAAAJgAAACwAAAAJAAAAMgAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
+                generatedXML.writeProperty(NAMESPACE_APPLE_WEBDAVFS + ":appledoubleheader", "AAUWBwACAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAACAAAAJgAAACwAAAAJAAAAMgAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
+
+                generatedXML.writeElement(NAMESPACE_OWNCLOUD + ":checksums", XMLWriter.OPENING);
+                if (sha1Sum != null && sha1Sum.length() > 0) {
+                    generatedXML.writeProperty(NAMESPACE_OWNCLOUD + ":checksum", "sha1:" + sha1Sum.toLowerCase());
+                }
+                generatedXML.writeElement(NAMESPACE_OWNCLOUD + ":checksums", XMLWriter.CLOSING);
+                if (sha1Sum != null && sha1Sum.length() > 0) {
+                    generatedXML.writeProperty("ME::sha1hex", sha1Sum.toLowerCase());
+                }
                 generatedXML.writeElement("DAV::prop", XMLWriter.CLOSING);
                 generatedXML.writeElement("DAV::status", XMLWriter.OPENING);
                 generatedXML.writeText(status);
@@ -316,7 +333,10 @@ public class DoPropfind extends AbstractMethod {
                 generatedXML.writeElement("DAV::propstat", XMLWriter.OPENING);
                 generatedXML.writeElement("DAV::prop", XMLWriter.OPENING);
 
-                generatedXML.writeElement("http://www.apple.com/webdav_fs/props/:appledoubleheader", XMLWriter.NO_CONTENT);
+                generatedXML.writeElement(NAMESPACE_APPLE_WEBDAVFS + ":appledoubleheader", XMLWriter.NO_CONTENT);
+                generatedXML.writeElement(NAMESPACE_OWNCLOUD + ":checksums", XMLWriter.NO_CONTENT);
+                generatedXML.writeElement(NAMESPACE_NEXTCLOUD + ":checksums", XMLWriter.NO_CONTENT);
+                generatedXML.writeElement("ME:sha1hex", XMLWriter.NO_CONTENT);
                 generatedXML.writeElement("DAV::quota", XMLWriter.NO_CONTENT);
                 generatedXML.writeElement("DAV::quotaused", XMLWriter.NO_CONTENT);
                 generatedXML.writeElement("DAV::quota-available-bytes", XMLWriter.NO_CONTENT);
@@ -361,7 +381,7 @@ public class DoPropfind extends AbstractMethod {
                     String property = (String) properties.nextElement();
                     switch (property) {
                         case "DAV::creationdate":
-                            generatedXML.writeProperty("DAV::creationdate", creationdate);
+                            generatedXML.writeProperty("DAV::creationdate", creationDateString);
                             break;
                         case "DAV::displayname":
                             generatedXML.writeElement("DAV::displayname", XMLWriter.OPENING);
@@ -402,7 +422,7 @@ public class DoPropfind extends AbstractMethod {
                             if (isFolder) {
                                 propertiesNotFound.addElement(property);
                             } else {
-                                generatedXML.writeProperty("DAV::getlastmodified", lastModified);
+                                generatedXML.writeProperty("DAV::getlastmodified", lastModifiedDateString);
                             }
                             break;
                         case "DAV::resourcetype":
@@ -436,6 +456,17 @@ public class DoPropfind extends AbstractMethod {
                             if (usedBytes >= 0) {
                                 generatedXML.writeProperty(property, String.valueOf(usedBytes));
                             }
+                            break;
+                        case NAMESPACE_APPLE_WEBDAVFS + ":appledoubleheader":
+                            generatedXML.writeProperty(property, "AAUWBwACAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAACAAAAJgAAACwAAAAJAAAAMgAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
+                            break;
+                        case NAMESPACE_OWNCLOUD + ":checksums":
+                        case NAMESPACE_NEXTCLOUD + ":checksums":
+                            generatedXML.writeElement(NAMESPACE_OWNCLOUD + ":checksums", XMLWriter.OPENING);
+                            if (sha1Sum != null && sha1Sum.length() > 0) {
+                                generatedXML.writeProperty(NAMESPACE_OWNCLOUD + ":checksum", "sha1:" + sha1Sum.toLowerCase());
+                            }
+                            generatedXML.writeElement(NAMESPACE_OWNCLOUD + ":checksums", XMLWriter.CLOSING);
                             break;
                         default:
                             propertiesNotFound.addElement(property);
@@ -603,4 +634,5 @@ public class DoPropfind extends AbstractMethod {
 
         lo = null;
     }
+
 }

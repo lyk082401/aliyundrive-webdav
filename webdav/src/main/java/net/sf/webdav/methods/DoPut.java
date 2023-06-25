@@ -22,6 +22,7 @@ import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
 import net.sf.webdav.WebdavStatus;
 import net.sf.webdav.exceptions.AccessDeniedException;
+import net.sf.webdav.exceptions.ChecksumNotMatchException;
 import net.sf.webdav.exceptions.LockFailedException;
 import net.sf.webdav.exceptions.WebdavException;
 import net.sf.webdav.locking.IResourceLocks;
@@ -60,14 +61,14 @@ public class DoPut extends AbstractMethod {
 
             _userAgent = req.getHeader("User-Agent");
 
-            if (isOSXFinder() && req.getContentLength() == 0) {
+            if (isOSXFinder(_userAgent) && req.getContentLength() == 0) {
                 // OS X Finder sends 2 PUTs; first has 0 content, second has content.
                 // This is the first one, so we'll ignore it ...
                 LOG.trace("-- First of multiple OS-X Finder PUT calls at {0}", path);
             }
 
             Hashtable<String, Integer> errorList = new Hashtable<>();
-            if (isOSXFinder()) {
+            if (isOSXFinder(_userAgent)) {
                 // OS X Finder sends 2 PUTs; first has 0 content, second has content.
                 // This is the second one that was preceded by a LOCK, so don't need to check the locks ...
             } else {
@@ -169,6 +170,8 @@ public class DoPut extends AbstractMethod {
 
                 } catch (AccessDeniedException e) {
                     resp.sendError(WebdavStatus.SC_FORBIDDEN);
+                } catch (ChecksumNotMatchException e) {
+                    resp.sendError(WebdavStatus.SC_BAD_REQUEST, "The computed checksum does not match the one received from the client.");
                 } catch (WebdavException e) {
                     resp.sendError(WebdavStatus.SC_INTERNAL_SERVER_ERROR);
                 } finally {
@@ -202,7 +205,7 @@ public class DoPut extends AbstractMethod {
      *
      */
     private void doUserAgentWorkaround(JapHttpResponse resp) {
-        if (isOSXFinder()) {
+        if (isOSXFinder(_userAgent)) {
             LOG.trace("DoPut.execute() : do workaround for user agent '"
                     + _userAgent + "'");
             resp.setStatus(WebdavStatus.SC_CREATED);
@@ -217,7 +220,5 @@ public class DoPut extends AbstractMethod {
         }
     }
 
-    private boolean isOSXFinder() {
-        return (_userAgent != null && _userAgent.contains("WebDAVFS") && !_userAgent.contains("Transmit"));
-    }
+
 }

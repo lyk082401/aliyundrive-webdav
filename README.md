@@ -180,14 +180,20 @@ AliyunDrive.newAliyunDrive()
 ![imaage](./doc/img/openapi_login.gif)
 
 # 客户端兼容性
-| 客户端 | 下载 | 上传 | 备注 |
-| :-----| ----: | :----: | :----: |
+| 客户端          | 下载 | 上传 | 备注 |
+|:-------------| ----: | :----: | :----: |
 | 群辉Cloud Sync | 可用 | 可用 | 使用单向同步非常稳定 | 
-| Rclone | 可用 | 可用 | 推荐, 支持各个系统 |
-| Mac原生 | 可用 | 可用 | | 
-| Windows原生 | 可用 | 可用 |  |
-| RaiDrive | 可用 | 可用 | Windows平台下建议用这个 |
+| Rclone       | 可用 | 可用 | 推荐, 支持各个系统 |
+| Mac原生        | 可用 | 可用 | | 
+| Windows原生    | 可用 | 可用 |  |
+| RaiDrive     | 可用 | 可用 | Windows平台下建议用这个 |
+| WinSCP       | 可用 | 可用 |  |
 
+## Rclone 配置说明
+- Rclone 1.62.2及以下版本应选择Vendor为Nextcloud以支持rclone自身的数据校验功能
+- Rclone 1.63.0及以上版本(目前为beta版本, [点击前往下载beta版](https://beta.rclone.org/)) 请选择Vendor为Fastmail Files, 如选择Vendor为Nextcloud, 则advanced config中nextcloud_chunk_size应设置为0, 否则使用时报错
+- Vendor 选择为Other无数据校验功能
+- Vendor 选择为Owncloud, 因Rclone本身只校验md5无数据校验功能
 
 # 浏览器获取refreshToken方式(仅WebApi需要)
 ### 方式1
@@ -225,14 +231,12 @@ javascript:var p=document.createElement('p');p.style='text-align:center;margin-t
 9. 文件下载断点续传
 10. Webdav下的流媒体播放等功能
 11. 支持文件名包含 `/` 字符
+12. 数据校验
+
 ## 暂不支持的功能
 1. 移动文件到其他目录的同时, 修改文件名。比如 /a.zip 移动到 /b/a1.zip, 是不支持的
 2. 文件上传断点续传
 3. 部分客户端兼容性不好
-## 已知问题
-1. 没有做文件sha1校验, 不保证上传文件的100%准确性（一般场景下, 是没问题的）
-2. 通过文件名和文件大小判断是否重复。也就是说如果一个文件即使发生了更新, 但其大小没有任何改变, 是不会自动上传的
-
 
 # 免责声明
 1. 本软件为免费开源项目, 无任何形式的盈利行为。

@@ -31,6 +31,8 @@ public class StoredObject {
 
     private boolean isNullRessource;
 
+    private String sha1sum;
+
     /**
      * Determines whether the StoredObject is a folder or a resource
      * 
@@ -138,7 +140,8 @@ public class StoredObject {
         this.lastModified = null;
         // this.content = null;
         this.contentLength = 0;
-        this.mimeType= null;
+        this.mimeType = null;
+        this.sha1sum = null;
     }
 
     /**
@@ -162,4 +165,10 @@ public class StoredObject {
         this.mimeType = mimeType;
     }
 
+    public String getSha1sum() {
+        return sha1sum;
+    }
+    public void setSha1sum(String sha1sum) {
+        this.sha1sum = sha1sum;
+    }
 }

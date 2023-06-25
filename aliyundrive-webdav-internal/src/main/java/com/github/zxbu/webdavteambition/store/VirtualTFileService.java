@@ -1,5 +1,6 @@
 package com.github.zxbu.webdavteambition.store;
 
+import net.sf.webdav.util.DateTimeUtils;
 import net.xdow.aliyundrive.bean.AliyunDriveEnum;
 import net.xdow.aliyundrive.bean.AliyunDriveFileInfo;
 import net.xdow.aliyundrive.bean.AliyunDriveResponse;
@@ -28,13 +29,17 @@ public class VirtualTFileService {
     /**
      * 创建文件
      */
-    public void createVirtualFile(String parentId, AliyunDriveResponse.FileCreateInfo fileCreateInfo) {
+    public void createVirtualFile(String parentId, AliyunDriveResponse.FileCreateInfo fileCreateInfo, long modifyTimeSec) {
         Map<String, AliyunDriveFileInfo> tFileMap = virtualTFileMap.get(parentId);
         if (tFileMap == null) {
             tFileMap = new ConcurrentHashMap<>();
             virtualTFileMap.put(parentId, tFileMap);
         }
-        tFileMap.put(fileCreateInfo.getFileId(), convert(fileCreateInfo));
+        AliyunDriveFileInfo tFile = convert(fileCreateInfo);
+        if (modifyTimeSec != -1) {
+            tFile.setLocalModifiedAt(DateTimeUtils.convertLocalDateToGMT(modifyTimeSec * 1000));
+        }
+        tFileMap.put(fileCreateInfo.getFileId(), tFile);
     }
 
     public AliyunDriveFileInfo get(String parentId, String fileId) {
@@ -51,7 +56,6 @@ public class VirtualTFileService {
             return;
         }
         tFile.setSize(tFile.getSize() + length);
-        tFile.setUpdatedAt(new Date());
     }
 
     public void remove(String parentId, String fileId) {
@@ -71,15 +75,17 @@ public class VirtualTFileService {
     }
 
     private AliyunDriveFileInfo convert(AliyunDriveResponse.FileCreateInfo fileCreateInfo) {
+
         AliyunDriveFileInfo tFile = new AliyunDriveFileInfo();
         tFile.setDriveId(fileCreateInfo.getDriveId());
         tFile.setFileId(fileCreateInfo.getFileId());
         tFile.setParentFileId(fileCreateInfo.getParentFileId());
-        tFile.setCreatedAt(new Date());
         tFile.setName(fileCreateInfo.getFileName());
         tFile.setType(AliyunDriveEnum.Type.File);
-        tFile.setUpdatedAt(new Date());
         tFile.setSize(0L);
+        Date currentDateGMT = DateTimeUtils.getCurrentDateGMT();
+        tFile.setCreatedAt(currentDateGMT);
+        tFile.setUpdatedAt(currentDateGMT);
         return tFile;
     }
 }
