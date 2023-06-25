@@ -31,7 +31,7 @@ public class AliyunDriveProperties {
     private transient String clientId;
 
     private transient String authorizationCode;
-    private transient String aliyunAccessTokenUrl = "https://adrive.xdow.net/oauth/access_token?code=%s&refresh_token=%s&ver=1.1.0";
+    private transient String aliyunAccessTokenUrl = "https://adrive.xdow.net/oauth/access_token?code=%s&refresh_token=%s&ver=1.2.0";
     private transient String aliyunAuthorizeUrl = "https://adrive.xdow.net/oauth/authorize?redirect_uri=%s";
 
     private transient Auth auth = new Auth();
