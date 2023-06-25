@@ -186,9 +186,9 @@ AliyunDrive.newAliyunDrive()
 
 # 客户端兼容性
 | 客户端           |           下载 | 上传 |                            备注                            |
-|:--------------|-------------:| :----: |:--------------------------------------------------------:|
+|:--------------|-------------:| :----: |:-------------------------:|
 | 群辉Cloud Sync  |         代理模式 | :white_check_mark: |                         建议使用单向同步                         | 
-| Rclone        | :rocket:直连模式 | :white_check_mark: |  推荐, 支持各个系统, 直连模式需要添加参数, 见下方[Rclone 配置说明](#Rclone 配置说明)  |
+| Rclone        | :rocket:直连模式 | :white_check_mark: |  推荐, 支持各个系统, 直连模式需要添加参数, 见下方配置说明  |
 | Mac原生         | :rocket:直连模式 | :white_check_mark: |                                                          | 
 | Transmit      | :rocket:直连模式 | :white_check_mark: |                                                          | 
 | Windows原生     |         代理模式 | :white_check_mark: |                                                          |
