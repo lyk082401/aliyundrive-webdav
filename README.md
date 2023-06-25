@@ -195,6 +195,7 @@ AliyunDrive.newAliyunDrive()
 | nPlayer      |             :rocket:直连模式 | 可用 |       推荐        |
 | MT管理器        |             :rocket:直连模式 | 可用 |       推荐        |
 | ES文件浏览器      |             :rocket:直连模式 | 可用 |                 |
+
 注: 所有客户端均默认支持代理模式
 
 ## Rclone 配置说明
