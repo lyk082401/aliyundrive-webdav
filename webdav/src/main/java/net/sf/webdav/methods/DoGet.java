@@ -137,7 +137,10 @@ public class DoGet extends DoHead {
                 childrenTemp.append(path);
                 childrenTemp.append("</title><style type=\"text/css\">");
                 childrenTemp.append(getCSS());
-                childrenTemp.append("</style></head>");
+                childrenTemp.append("</style>");
+                childrenTemp.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
+                childrenTemp.append("<meta name=\"referrer\" content=\"same-origin\" />");
+                childrenTemp.append("</head>");
                 childrenTemp.append("<body>");
                 childrenTemp.append(getHeader(transaction, path, resp, req));
                 childrenTemp.append("<table>");
