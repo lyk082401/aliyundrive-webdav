@@ -185,18 +185,19 @@ AliyunDrive.newAliyunDrive()
 ![imaage](./doc/img/openapi_login.gif)
 
 # 客户端兼容性
-| 客户端          |             下载 | 上传 |       备注        |
-|:-------------|---------------:| :----: |:---------------:|
-| 群辉Cloud Sync |             代理模式 | 可用 |    建议使用单向同步     | 
-| Rclone       |           代理模式 | 可用 |   推荐, 支持各个系统    |
-| Mac原生        |           :rocket:直连模式 | 可用 |                 | 
-| Transmit     |           :rocket:直连模式 | 可用 |                 | 
-| Windows原生    |           代理模式 | 可用 |                 |
-| RaiDrive     |             :rocket:直连模式 | 可用 | Windows平台下建议用这个 |
-| WinSCP       |           代理模式 | 可用 |                 |
-| nPlayer      |             :rocket:直连模式 | 可用 |       推荐        |
-| MT管理器        |             :rocket:直连模式 | 可用 |       推荐        |
-| ES文件浏览器      |             :rocket:直连模式 | 可用 |                 |
+| 客户端          |             下载 | 上传 |        备注        |
+|:-------------|---------------:| :----: |:----------------:|
+| 群辉Cloud Sync |             代理模式 | 可用 |     建议使用单向同步     | 
+| Rclone       |           代理模式 | 可用 |    推荐, 支持各个系统    |
+| Mac原生        |           :rocket:直连模式 | 可用 |                  | 
+| Transmit     |           :rocket:直连模式 | 可用 |                  | 
+| Windows原生    |           代理模式 | 可用 |                  |
+| RaiDrive     |             :rocket:直连模式 | 可用 | Windows平台下建议用这个  |
+| WinSCP       |           代理模式 | 可用 |                  |
+| nPlayer      |             :rocket:直连模式 | 可用 |        推荐        |
+| MT管理器        |             :rocket:直连模式 | 可用 |        推荐        |
+| ES文件浏览器      |             :rocket:直连模式 | 可用 |                  |
+| Kodi 20.0+   |             :rocket:直连模式 | 可用 | 2023年后编译版本可用直连模式 |
 
 注: 所有客户端均默认支持代理模式
 

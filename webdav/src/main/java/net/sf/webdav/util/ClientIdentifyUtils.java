@@ -31,4 +31,8 @@ public class ClientIdentifyUtils {
     public static boolean isSynoCloudSync(String userAgent) {
         return userAgent == null;
     }
+
+    public static boolean isKodi19AndBelow(String userAgent) {
+        return String.valueOf(userAgent).matches("Kodi/1*[0-9]\\..+");
+    }
 }
