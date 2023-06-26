@@ -1,7 +1,7 @@
 [![image](https://img.shields.io/github/v/release/eritpchy/aliyundrive-webdav)](https://github.com/eritpchy/aliyundrive-webdav/releases)  [![image](https://img.shields.io/maven-central/v/net.xdow/aliyundrive-sdk-openapi)](https://central.sonatype.com/artifact/net.xdow/aliyundrive-sdk-openapi/)
 
 说明
-> [1.1.0版本](https://github.com/zxbu/aliyundrive-webdav/releases/tag/v1.1.0)支持阿里Teambition网盘的webdav协议 
+> [1.1.0版本](https://github.com/zxbu/aliyundrive-webdav/releases/tag/v1.1.0)支持阿里Teambition网盘的webdav协议
 
 > 2.x版本仅支持阿里云盘, 不再维护Teambition网盘版本
 
@@ -12,21 +12,21 @@
 目录
 - [aliyundrive-webdav](#aliyundrive-webdav)
 - [如何使用](#如何使用)
-  - [Jar包运行](#jar包运行)
-  - [容器运行](#容器运行)
-  - [Docker-Compose](#docker-compose)
+    - [Jar包运行](#jar包运行)
+    - [容器运行](#容器运行)
+    - [Docker-Compose](#docker-compose)
 - [参数说明](#参数说明)
 - [QQ群](#qq群)
 - [新手教程](#新手教程)
-  - [群晖](#群晖)
-  - [Windows10](#windows10)
-  - [Linux](#linux)
-  - [Mac](#mac)
+    - [群晖](#群晖)
+    - [Windows10](#windows10)
+    - [Linux](#linux)
+    - [Mac](#mac)
 - [客户端兼容性](#客户端兼容性)
-- [浏览器获取refreshToken方式](#浏览器获取refreshtoken方式)
+- [浏览器获取refreshToken方式](#浏览器获取refreshtoken方式仅webapi需要)
 - [功能说明](#功能说明)
-  - [支持的功能](#支持的功能)
-  - [注意事项](#注意事项)
+    - [支持的功能](#支持的功能)
+    - [注意事项](#注意事项)
 - [免责声明](#免责声明)
 
 # aliyundrive-webdav
@@ -185,19 +185,19 @@ AliyunDrive.newAliyunDrive()
 ![imaage](./doc/img/openapi_login.gif)
 
 # 客户端兼容性
-| 客户端           |           下载 | 上传 |                            备注                            |
-|:--------------|-------------:| :----: |:-------------------------:|
-| 群辉Cloud Sync  |         代理模式 | :white_check_mark: |                         建议使用单向同步                         | 
-| Rclone        | :rocket:直连模式 | :white_check_mark: |  推荐, 支持各个系统, 直连模式需要添加参数, 见下方配置说明  |
-| Mac原生         | :rocket:直连模式 | :white_check_mark: |                                                          | 
-| Transmit      | :rocket:直连模式 | :white_check_mark: |                                                          | 
-| Windows原生     |         代理模式 | :white_check_mark: |                                                          |
-| RaiDrive      | :rocket:直连模式 | :white_check_mark: |                     Windows平台下建议用这个                      |
-| WinSCP 6.1.1+ | :rocket:直连模式 | :white_check_mark: |                     6.1.1以下版本不支持直连模式                     |
-| nPlayer       | :rocket:直连模式 | :white_check_mark: |                            推荐                            |
-| MT管理器         | :rocket:直连模式 | :white_check_mark: |                            推荐                            |
-| ES文件浏览器       | :rocket:直连模式 | :white_check_mark: |                                                          |
-| Kodi 20.0+    | :rocket:直连模式 | :white_check_mark: |                     2023年后编译版本可用直连模式                     |
+| 客户端           |           下载 | 上传 |                 备注                 |
+|:--------------|-------------:| :----: |:----------------------------------:|
+| 群辉Cloud Sync  |         代理模式 | :white_check_mark: |              建议使用单向同步              | 
+| Rclone        | :rocket:直连模式 | :white_check_mark: |  推荐, 支持各个系统, 直连模式需要添加参数, 见下方配置说明   |
+| Mac原生         | :rocket:直连模式 | :white_check_mark: |                                    | 
+| Transmit      | :rocket:直连模式 | :white_check_mark: |                                    | 
+| Windows原生     | :rocket:直连模式 | :white_check_mark: | 有4GB文件传输限制,首次使用还需配置http, 见下方'注意事项' |
+| RaiDrive      | :rocket:直连模式 | :white_check_mark: |          Windows平台下建议用这个           |
+| WinSCP 6.1.1+ | :rocket:直连模式 | :white_check_mark: |          6.1.1以下版本不支持直连模式          |
+| nPlayer       | :rocket:直连模式 | :white_check_mark: |                 推荐                 |
+| MT管理器         | :rocket:直连模式 | :white_check_mark: |                 推荐                 |
+| ES文件浏览器       | :rocket:直连模式 | :white_check_mark: |                                    |
+| Kodi 20.0+    | :rocket:直连模式 | :white_check_mark: |          2023年后编译版本可用直连模式          |
 
 注: 所有客户端均默认支持代理模式
 
@@ -221,7 +221,7 @@ AliyunDrive.newAliyunDrive()
 </details>
 <details>
   <summary>方式2</summary>
-  
+
 1. 先通过浏览器（建议chrome）打开阿里云盘官网并登录：https://www.aliyundrive.com/drive/
 2. 登录成功后, 在地址栏输入 javascript:
    ![imgage](./doc/img/step1.jpg)
@@ -259,6 +259,17 @@ javascript:var p=document.createElement('p');p.style='text-align:center;margin-t
 2. 文件上传断点续传
 3. 部分客户端兼容性不好
 4. 由于http协议在公网上明文传输密码, 部署在公网切记要开https, 否则不安全, 用宝塔反代即可
+<details>
+  <summary>5. Windows提示无法访问</summary>
+  <pre>注册表: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WebClient\Parameters
+BasicAuthLevel 改为2, 改完重启计算机或WebClient服务</pre>
+</details>
+<details>
+  <summary>6. Windows提示文件大小超过允许的限制，无法保存</summary>
+  <pre>注册表: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WebClient\Parameters
+FileSizeLimitInBytes 改为FFFFFFFF, 也就是最大4GB限制, 改完重启计算机或WebClient服务
+其他教程: <a href="http://blog.51yip.com/linux/2221.html" target="_blank">文件大小超过允许的限制，无法保存</a></pre>
+</details>
 
 # 免责声明
 1. 本软件为免费开源项目, 无任何形式的盈利行为。

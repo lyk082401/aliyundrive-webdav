@@ -39,4 +39,23 @@ public class ClientIdentifyUtils {
     public static boolean isKodi19AndBelow(String userAgent) {
         return String.valueOf(userAgent).matches("Kodi/1*[0-9]\\..+");
     }
+
+    /**
+     *
+     * @param referer
+     * @return true Proxy mode, false Direct mode
+     */
+    public static boolean checkAliyunDriveRefererForProxyMode(String referer) {
+        if (referer == null) {
+            return false;
+        }
+        referer = referer.trim();
+        if (referer.isEmpty()) {
+            return false;
+        }
+        if (referer.toLowerCase().equals("https://www.aliyundrive.com/drive")) {
+            return false;
+        }
+        return true;
+    }
 }

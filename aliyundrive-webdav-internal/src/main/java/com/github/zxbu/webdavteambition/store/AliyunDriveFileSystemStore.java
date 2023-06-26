@@ -311,13 +311,17 @@ public class AliyunDriveFileSystemStore implements IWebdavStore {
             case Proxy:
                 return null;
             default:
-                String userAgent = transaction.getRequest().getHeader("User-Agent");
-                if (ClientIdentifyUtils.isMicrosoftExplorer(userAgent) || ClientIdentifyUtils.isWinSCP5AndBelow(userAgent)
-                        || ClientIdentifyUtils.isSynoCloudSync(userAgent) || ClientIdentifyUtils.isKodi19AndBelow(userAgent)) {
+                JapHttpRequest request = transaction.getRequest();
+                String userAgent = request.getHeader("User-Agent");
+                String referer = request.getHeader("Referer");
+                if (ClientIdentifyUtils.isWinSCP5AndBelow(userAgent)
+                        || ClientIdentifyUtils.isSynoCloudSync(userAgent) || ClientIdentifyUtils.isKodi19AndBelow(userAgent)
+                        || ClientIdentifyUtils.checkAliyunDriveRefererForProxyMode(referer)) {
                     if (mode == AliyunDriveProperties.DownloadProxyMode.Direct) {
                         throw new WebdavException("DirectModeUnsupportedCode",
                             "This client is not support Direct mode, please consider switch to Proxy mode, or Auto mode.");
                     } else {
+                        LOGGER.warn("Using Proxy mode User-Agent: {} Referer: {}", userAgent, referer);
                         return null;
                     }
                 }
