@@ -126,18 +126,18 @@ sudo kubectl apply -f k8s_app.yaml
 --server.port
     非必填, 服务器端口号, 默认为8080
 --aliyundrive.auth.enable=true
-    是否开启WebDav账户验证, 默认开启
+    是否开启Webdav账户验证, 默认开启
 --aliyundrive.auth.user-name=admin
-    WebDav账户, 默认admin
+    Webdav账户, 默认admin
 --aliyundrive.auth.password=admin
-    WebDav密码, 默认admin
+    Webdav密码, 默认admin
 --aliyundrive.work-dir=./conf
     token挂载路径, 如果在同一个路径多开, 需修改此配置
 --aliyundrive.driver=OpenApi
     驱动引擎, 默认官方OpenApi, 可选WebApi
 --aliyundrive.download-proxy-mode=Auto
     文件下载模式, 默认Auto, 自动模式, 默认直连模式, 客户端不支持直连模式时使用代理模式
-    可选Direct, 强制直连模式, 使用此模式, 一些客户端不兼容, 将会直接报错400,302,403,'文件大小超出允许的限制'等错误, 详见 '客户端兼容性'
+    可选Direct, 强制直连模式, 使用此模式, 一些客户端不兼容, 将会直接报错400,302,403等错误, 详见 '客户端兼容性'
     可选Proxy, 代理模式, 文件下载由程序中转, 3.3.0以前版本默认模式, 如遇问题或报上述错误可尝试使用Proxy模式
     
 ```
@@ -248,7 +248,7 @@ javascript:var p=document.createElement('p');p.style='text-align:center;margin-t
 5. 文件删除
 6. 文件上传（支持大文件自动分批上传）
 7. 支持超大文件上传（官方限制30G）
-8. 支持WebDav权限校验（默认账户密码：admin/admin）
+8. 支持Webdav权限校验（默认账户密码：admin/admin）
 9. 文件下载断点续传
 10. Webdav下的流媒体播放等功能
 11. 支持文件名包含 `/` 字符
