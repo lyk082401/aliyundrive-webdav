@@ -14,6 +14,7 @@ import net.xdow.aliyundrive.net.interceptor.XHttpLoggingInterceptor;
 import net.xdow.aliyundrive.util.JsonUtils;
 import net.xdow.aliyundrive.util.StringUtils;
 import okhttp3.*;
+import okhttp3.internal.Util;
 import org.xbill.DNS.Address;
 
 import java.io.IOException;
@@ -51,10 +52,14 @@ public class AliyunDriveOpenApiImplV1 implements IAliyunDrive, AliyunDriveAuthen
                             int code = response.code();
                             if (code == 401 || code == 400) {
                                 ResponseBody body = response.peekBody(40960);
-                                String res = body.string();
-                                if (res.contains("AccessTokenInvalid") || res.contains("TokenExpired")) {
-                                    AliyunDriveOpenApiImplV1.this.requestNewAccessToken();
-                                    return chain.proceed(AliyunDriveOpenApiImplV1.this.buildCommonRequestHeader(request));
+                                try {
+                                    String res = body.string();
+                                    if (res.contains("AccessTokenInvalid") || res.contains("TokenExpired")) {
+                                        AliyunDriveOpenApiImplV1.this.requestNewAccessToken();
+                                        return chain.proceed(AliyunDriveOpenApiImplV1.this.buildCommonRequestHeader(request));
+                                    }
+                                } finally {
+                                    Util.closeQuietly(body);
                                 }
                             }
                         } catch (Exception e) {

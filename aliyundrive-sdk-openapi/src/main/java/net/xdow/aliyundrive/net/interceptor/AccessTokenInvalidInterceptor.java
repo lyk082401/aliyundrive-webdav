@@ -4,6 +4,7 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.internal.Util;
 
 import java.io.IOException;
 
@@ -23,9 +24,13 @@ public class AccessTokenInvalidInterceptor implements Interceptor {
             int code = response.code();
             if (code == 401 || code == 400) {
                 ResponseBody body = response.peekBody(40960);
-                String res = body.string();
-                if (res.contains("AccessTokenInvalid") || res.contains("TokenExpired")) {
-                    listener.run();
+                try {
+                    String res = body.string();
+                    if (res.contains("AccessTokenInvalid") || res.contains("TokenExpired")) {
+                        listener.run();
+                    }
+                } finally {
+                    Util.closeQuietly(body);
                 }
             }
         } catch (Exception e) {

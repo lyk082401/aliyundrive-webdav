@@ -97,7 +97,7 @@ public class AliyunDriveSessionManager {
             }
         }
         if (createSessionResult.contains("\"result\":false")) {
-            LOGGER.error("登录设备过多, 请进入\"登录设备管理\", 退出一些设备。");
+            LOGGER.error("登录设备过多, 请进入\"登录设备管理\", 退出一些设备, 如设备被意外退出登录, 请手动删除配置文件后重启程序。");
             session.setNonce(0);
         }
         if (createSessionResult.contains("\"result\":true")) {

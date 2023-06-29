@@ -16,6 +16,7 @@ import net.xdow.aliyundrive.webapi.bean.AliyunDriveWebResponse;
 import net.xdow.aliyundrive.webapi.bean.AliyunDriveWebShareRequestInfo;
 import net.xdow.aliyundrive.webapi.net.AliyunDriveWebCall;
 import okhttp3.*;
+import okhttp3.internal.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Address;
@@ -55,30 +56,38 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive, AliyunDriveAuthent
                         int code = response.code();
                         if (code == 400 || code == 401) {
                             ResponseBody body = response.peekBody(40960);
-                            String res = body.string();
-                            String url = request.url().toString();
-                            boolean isRenewRequest = url.endsWith("/renew_session");
-                            if (!isRenewRequest && res.contains("DeviceSessionSignatureInvalid")) {
-                                AliyunDriveWebApiImplV1.this.onAuthorizerEvent(AliyunDriveWebConstant.Event.DEVICE_SESSION_SIGNATURE_INVALID);
-                                return chain.proceed(AliyunDriveWebApiImplV1.this.buildCommonRequestHeader(request));
-                            } else if (!isRenewRequest && res.contains("UserDeviceOffline")) {
-                                AliyunDriveWebApiImplV1.this.onAuthorizerEvent(AliyunDriveWebConstant.Event.USER_DEVICE_OFFLINE);
-                                LOGGER.error("登录设备过多, 请进入\"登录设备管理\", 退出一些设备。");
-                                if (!url.endsWith("/token/refresh")) {
-                                    AliyunDriveWebApiImplV1.this.requestNewAccessToken();
-                                    Response retryResponse = chain.proceed(AliyunDriveWebApiImplV1.this.buildCommonRequestHeader(request));
-                                    ResponseBody retryBody = response.peekBody(40960);
-                                    String retryRes = retryBody.string();
-                                    if (retryRes.contains("UserDeviceOffline")) {
-                                        LOGGER.error("重新登录失败, 设备数过多, 等待30分钟...");
-                                        //防止请求数过多
+                            try {
+                                String res = body.string();
+                                String url = request.url().toString();
+                                boolean isRenewRequest = url.endsWith("/renew_session");
+                                if (!isRenewRequest && res.contains("DeviceSessionSignatureInvalid")) {
+                                    AliyunDriveWebApiImplV1.this.onAuthorizerEvent(AliyunDriveWebConstant.Event.DEVICE_SESSION_SIGNATURE_INVALID);
+                                    return chain.proceed(AliyunDriveWebApiImplV1.this.buildCommonRequestHeader(request));
+                                } else if (!isRenewRequest && res.contains("UserDeviceOffline")) {
+                                    AliyunDriveWebApiImplV1.this.onAuthorizerEvent(AliyunDriveWebConstant.Event.USER_DEVICE_OFFLINE);
+                                    LOGGER.error("登录设备过多, 请进入\"登录设备管理\", 退出一些设备, 如设备被意外退出登录, 请手动删除配置文件后重启程序。");
+                                    if (!url.endsWith("/token/refresh")) {
+                                        AliyunDriveWebApiImplV1.this.requestNewAccessToken();
+                                        Response retryResponse = chain.proceed(AliyunDriveWebApiImplV1.this.buildCommonRequestHeader(request));
+                                        ResponseBody retryBody = response.peekBody(40960);
                                         try {
-                                            TimeUnit.MINUTES.sleep(30);
-                                        } catch (InterruptedException e) {
+                                            String retryRes = retryBody.string();
+                                            if (retryRes.contains("UserDeviceOffline")) {
+                                                LOGGER.error("重新登录失败, 设备数过多, 等待30分钟...");
+                                                //防止请求数过多
+                                                try {
+                                                    TimeUnit.MINUTES.sleep(30);
+                                                } catch (InterruptedException e) {
+                                                }
+                                            }
+                                        } finally {
+                                            Util.closeQuietly(retryBody);
                                         }
                                     }
+                                    return response;
                                 }
-                                return response;
+                            } finally {
+                                Util.closeQuietly(body);
                             }
                         }
                         return response;
@@ -90,14 +99,18 @@ public class AliyunDriveWebApiImplV1 implements IAliyunDrive, AliyunDriveAuthent
                         int code = response.code();
                         if (code == 401 || code == 400) {
                             ResponseBody body = response.peekBody(40960);
-                            String res = body.string();
-                            if (res.contains("AccessToken")) {
-                                requestNewAccessToken();
-                                String accessToken = AliyunDriveWebApiImplV1.this.mAccessTokenInfo.getAccessToken();
-                                return response.request().newBuilder()
-                                        .removeHeader("authorization")
-                                        .header("authorization", accessToken)
-                                        .build();
+                            try {
+                                String res = body.string();
+                                if (res.contains("AccessToken")) {
+                                    requestNewAccessToken();
+                                    String accessToken = AliyunDriveWebApiImplV1.this.mAccessTokenInfo.getAccessToken();
+                                    return response.request().newBuilder()
+                                            .removeHeader("authorization")
+                                            .header("authorization", accessToken)
+                                            .build();
+                                }
+                            } finally {
+                                Util.closeQuietly(body);
                             }
                         }
                         return null;
