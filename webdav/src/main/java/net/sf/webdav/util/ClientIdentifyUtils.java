@@ -53,7 +53,7 @@ public class ClientIdentifyUtils {
         if (referer.isEmpty()) {
             return false;
         }
-        if (referer.toLowerCase().equals("https://www.aliyundrive.com/drive")) {
+        if (referer.toLowerCase().matches("https*://.*aliyundrive.com.*")) {
             return false;
         }
         return true;
