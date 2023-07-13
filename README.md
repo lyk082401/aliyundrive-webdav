@@ -194,7 +194,8 @@ AliyunDrive.newAliyunDrive()
 | Windows原生     | :rocket:直连模式 | :white_check_mark: | 有4GB文件传输限制,首次使用还需配置http, 见下方'注意事项' |
 | RaiDrive      | :rocket:直连模式 | :white_check_mark: |          Windows平台下建议用这个           |
 | WinSCP 6.1.1+ | :rocket:直连模式 | :white_check_mark: |          6.1.1以下版本不支持直连模式          |
-| nPlayer       | :rocket:直连模式 | :white_check_mark: |                 推荐                 |
+| Fileball       | :rocket:直连模式 | :white_check_mark: |                 iOS推荐                 |
+| nPlayer       | :rocket:直连模式 | :white_check_mark: |                                  |
 | MT管理器         | :rocket:直连模式 | :white_check_mark: |                 推荐                 |
 | ES文件浏览器       | :rocket:直连模式 | :white_check_mark: |                                    |
 | Kodi 20.0+    | :rocket:直连模式 | :white_check_mark: |          2023年后编译版本可用直连模式          |
